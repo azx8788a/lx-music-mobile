@@ -1,11 +1,12 @@
 import { useRef, useImperativeHandle, forwardRef, useState } from 'react'
+import { View, TouchableOpacity } from 'react-native'
 import ConfirmAlert, { type ConfirmAlertType } from '@/components/common/ConfirmAlert'
 import Text from '@/components/common/Text'
-import { View } from 'react-native'
 import Input, { type InputType } from '@/components/common/Input'
 import { createStyle } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
+import { showWyUserPlaylistModal } from '@/navigation/utils'
 // import SourceSelector, { type SourceSelectorProps, type SourceSelectorType } from '../SourceSelector'
 import { type Source } from '@/store/songlist/state'
 
@@ -90,6 +91,11 @@ export default forwardRef<ModalType, ModalProps>(({ onOpenId }, ref) => {
     onOpenId(id)
   }
 
+  const handleOpenWyPlaylist = () => {
+    alertRef.current?.setVisible(false)
+    showWyUserPlaylistModal()
+  }
+
   return (
     visible
       ? <ConfirmAlert
@@ -101,6 +107,9 @@ export default forwardRef<ModalType, ModalProps>(({ onOpenId }, ref) => {
               {/* <SourceSelector style={{ ...styles.selector, backgroundColor: theme['c-primary-input-background'] }} ref={sourceSelectorRef} onSourceChange={onSourceChange} /> */}
               <IdInput ref={inputRef} />
             </View>
+            <TouchableOpacity style={styles.wyEntry} onPress={handleOpenWyPlaylist}>
+            <Text style={{ color: theme['c-primary-font'] }} size={13}>{t('wy_playlist_open')}</Text>
+          </TouchableOpacity>
             <Text style={styles.inputTipText} size={13} color={theme['c-600']}>{t('songlist_open_input_tip')}</Text>
           </View>
         </ConfirmAlert>
@@ -137,6 +146,10 @@ const styles = createStyle({
   inputTipText: {
     marginTop: 15,
     // lineHeight: 18,
+  },
+  wyEntry: {
+    marginTop: 15,
+    alignSelf: 'flex-start',
   },
 })
 

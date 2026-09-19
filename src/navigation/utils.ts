@@ -6,6 +6,7 @@ import {
   DOWNLOAD_MODAL,
   DOWNLOAD_MANAGER_MODAL,
   MOD_NOTICE_MODAL,
+  WY_USER_PLAYLIST_MODAL,
 } from './screenNames'
 import themeState from '@/store/theme/state'
 
@@ -19,6 +20,36 @@ export const dismissOverlay = async(compId: string) => Navigation.dismissOverlay
 export const pop = async(compId: string) => Navigation.pop(compId)
 export const popToRoot = async(compId: string) => Navigation.popToRoot(compId)
 export const popTo = async(compId: string) => Navigation.popTo(compId)
+
+export const showWyUserPlaylistModal = () => {
+  const theme = themeState.theme
+  const now = Date.now()
+  if (lastOverlayShowTime[WY_USER_PLAYLIST_MODAL] && now - lastOverlayShowTime[WY_USER_PLAYLIST_MODAL] < 300) return
+  lastOverlayShowTime[WY_USER_PLAYLIST_MODAL] = now
+
+  void Navigation.showOverlay({
+    component: {
+      name: WY_USER_PLAYLIST_MODAL,
+      options: {
+        layout: {
+          componentBackgroundColor: 'transparent',
+        },
+        overlay: {
+          interceptTouchOutside: true,
+        },
+        statusBar: {
+          drawBehind: true,
+          visible: true,
+          style: getStatusBarStyle(theme.isDark),
+          backgroundColor: 'transparent',
+        },
+        navigationBar: {
+          backgroundColor: theme['c-content-background'],
+        },
+      },
+    },
+  })
+}
 
 export const showModNoticeModal = () => {
   const theme = themeState.theme

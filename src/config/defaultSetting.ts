@@ -73,6 +73,8 @@ const defaultSetting: LX.AppSetting = {
   'download.savePath': '',
   'download.quality': '320k',
 
+  'wy.musicUToken': '',
+
   'sync.enable': false,
 
   // 'theme.id': 'blue_plus',

@@ -367,6 +367,11 @@ declare global {
       'download.quality': LX.Quality
 
       /**
+       * 网易云登录 Token（MUSIC_U Cookie 值），用于导入网易云收藏歌单
+       */
+      'wy.musicUToken': string
+
+      /**
        * 是否启用同步
        */
       'sync.enable': boolean

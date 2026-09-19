@@ -7,6 +7,7 @@ import SourceName from './SourceName'
 import DownloadSavePath from './DownloadSavePath'
 import DownloadQuality from './DownloadQuality'
 import DownloadFileName from './DownloadFileName'
+import WyMusicUToken from './WyMusicUToken'
 import Language from './Language'
 import FontSize from './FontSize'
 import ShareType from './ShareType'
@@ -45,6 +46,7 @@ export default memo(() => {
       <DownloadSavePath />
       <DownloadQuality />
       <DownloadFileName />
+      <WyMusicUToken />
       <Source />
       <SourceName />
     </Section>

@@ -542,5 +542,17 @@
   "download_task_exist": "该歌曲已在下载列表",
   "setting_basic_download_save_path": "下载保存路径",
   "setting_basic_download_quality": "下载音质",
-  "setting_basic_download_file_name": "下载文件命名"
+  "setting_basic_download_file_name": "下载文件命名",
+  "setting_basic_wy_musicutoken": "网易云登录 Token",
+  "setting_basic_wy_musicutoken_saved": "已保存（点击修改）",
+  "setting_basic_wy_musicutoken_not_set": "未设置（点击设置）",
+  "setting_basic_wy_musicutoken_clear": "清除",
+  "setting_basic_wy_musicutoken_tip": "在浏览器登录网易云音乐后，从 Cookies 中复制 name 为 MUSIC_U 的值填入，即可在「歌单」页导入你的收藏歌单",
+  "wy_playlist_modal_title": "我的网易云歌单",
+  "wy_playlist_token_empty": "未设置网易云 Token",
+  "wy_playlist_token_guide": "请在「设置 → 基础设置」中填写网易云登录 Token",
+  "wy_playlist_load_fail": "歌单获取失败，请检查 Token 是否有效",
+  "wy_playlist_retry": "重试",
+  "wy_playlist_empty": "没有找到歌单",
+  "wy_playlist_open": "从我的网易云歌单选择"
 }

@@ -542,5 +542,17 @@
   "download_task_exist": "該歌曲已在下載列表",
   "setting_basic_download_save_path": "下載保存路徑",
   "setting_basic_download_quality": "下載音質",
-  "setting_basic_download_file_name": "下載檔案命名"
+  "setting_basic_download_file_name": "下載檔案命名",
+  "setting_basic_wy_musicutoken": "網易雲登入 Token",
+  "setting_basic_wy_musicutoken_saved": "已保存（點擊修改）",
+  "setting_basic_wy_musicutoken_not_set": "未設定（點擊設定）",
+  "setting_basic_wy_musicutoken_clear": "清除",
+  "setting_basic_wy_musicutoken_tip": "在瀏覽器登入網易雲音樂後，從 Cookies 中複製 name 為 MUSIC_U 的值填入，即可在「歌單」頁匯入你的收藏歌單",
+  "wy_playlist_modal_title": "我的網易雲歌單",
+  "wy_playlist_token_empty": "未設定網易雲 Token",
+  "wy_playlist_token_guide": "請在「設定 → 基礎設定」中填寫網易雲登入 Token",
+  "wy_playlist_load_fail": "歌單取得失敗，請檢查 Token 是否有效",
+  "wy_playlist_retry": "重試",
+  "wy_playlist_empty": "沒有找到歌單",
+  "wy_playlist_open": "從我的網易雲歌單選擇"
 }

@@ -542,5 +542,17 @@
   "download_task_exist": "Song already in download list",
   "setting_basic_download_save_path": "Download save path",
   "setting_basic_download_quality": "Download quality",
-  "setting_basic_download_file_name": "Download file name"
+  "setting_basic_download_file_name": "Download file name",
+  "setting_basic_wy_musicutoken": "NetEase login token",
+  "setting_basic_wy_musicutoken_saved": "Saved (tap to edit)",
+  "setting_basic_wy_musicutoken_not_set": "Not set (tap to configure)",
+  "setting_basic_wy_musicutoken_clear": "Clear",
+  "setting_basic_wy_musicutoken_tip": "Log in to NetEase Cloud Music in a browser, copy the value of the cookie named MUSIC_U here, then you can import your playlists on the Songlist page",
+  "wy_playlist_modal_title": "My NetEase playlists",
+  "wy_playlist_token_empty": "NetEase token not set",
+  "wy_playlist_token_guide": "Set the NetEase login token in Settings → Basic first",
+  "wy_playlist_load_fail": "Failed to load playlists, check if the token is valid",
+  "wy_playlist_retry": "Retry",
+  "wy_playlist_empty": "No playlists found",
+  "wy_playlist_open": "Choose from my NetEase playlists"
 }
