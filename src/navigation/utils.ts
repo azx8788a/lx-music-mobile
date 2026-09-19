@@ -3,8 +3,12 @@ import {
   VERSION_MODAL,
   PACT_MODAL,
   SYNC_MODE_MODAL,
+  DOWNLOAD_MODAL,
+  DOWNLOAD_MANAGER_MODAL,
 } from './screenNames'
 import themeState from '@/store/theme/state'
+
+const lastOverlayShowTime: Record<string, number> = {}
 
 
 export const getStatusBarStyle = (isDark: boolean) => isDark ? 'light' : 'dark'
@@ -14,6 +18,66 @@ export const dismissOverlay = async(compId: string) => Navigation.dismissOverlay
 export const pop = async(compId: string) => Navigation.pop(compId)
 export const popToRoot = async(compId: string) => Navigation.popToRoot(compId)
 export const popTo = async(compId: string) => Navigation.popTo(compId)
+
+export const showDownloadModal = () => {
+  const theme = themeState.theme
+  const now = Date.now()
+  if (lastOverlayShowTime[DOWNLOAD_MODAL] && now - lastOverlayShowTime[DOWNLOAD_MODAL] < 300) return
+  lastOverlayShowTime[DOWNLOAD_MODAL] = now
+
+  void Navigation.showOverlay({
+    component: {
+      name: DOWNLOAD_MODAL,
+      options: {
+        layout: {
+          componentBackgroundColor: 'transparent',
+        },
+        overlay: {
+          interceptTouchOutside: true,
+        },
+        statusBar: {
+          drawBehind: true,
+          visible: true,
+          style: getStatusBarStyle(theme.isDark),
+          backgroundColor: 'transparent',
+        },
+        navigationBar: {
+          backgroundColor: theme['c-content-background'],
+        },
+      },
+    },
+  })
+}
+
+export const showDownloadManagerModal = () => {
+  const theme = themeState.theme
+  const now = Date.now()
+  if (lastOverlayShowTime[DOWNLOAD_MANAGER_MODAL] && now - lastOverlayShowTime[DOWNLOAD_MANAGER_MODAL] < 300) return
+  lastOverlayShowTime[DOWNLOAD_MANAGER_MODAL] = now
+
+  void Navigation.showOverlay({
+    component: {
+      name: DOWNLOAD_MANAGER_MODAL,
+      options: {
+        layout: {
+          componentBackgroundColor: 'transparent',
+        },
+        overlay: {
+          interceptTouchOutside: true,
+        },
+        statusBar: {
+          drawBehind: true,
+          visible: true,
+          style: getStatusBarStyle(theme.isDark),
+          backgroundColor: 'transparent',
+        },
+        navigationBar: {
+          backgroundColor: theme['c-content-background'],
+        },
+      },
+    },
+  })
+}
 
 export const showPactModal = () => {
   const theme = themeState.theme

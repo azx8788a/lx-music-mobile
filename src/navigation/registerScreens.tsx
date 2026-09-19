@@ -19,11 +19,15 @@ import {
   VERSION_MODAL,
   PACT_MODAL,
   SYNC_MODE_MODAL,
+  DOWNLOAD_MODAL,
+  DOWNLOAD_MANAGER_MODAL,
   // SETTING_SCREEN,
 } from './screenNames'
 import VersionModal from './components/VersionModal'
 import PactModal from './components/PactModal'
 import SyncModeModal from './components/SyncModeModal'
+import DownloadModal from './components/DownloadModal'
+import DownloadManagerModal from './components/DownloadManagerModal'
 
 function WrappedComponent(Component: any) {
   return function inject(props: Record<string, any>) {
@@ -47,6 +51,8 @@ export default () => {
   Navigation.registerComponent(VERSION_MODAL, () => WrappedComponent(VersionModal))
   Navigation.registerComponent(PACT_MODAL, () => WrappedComponent(PactModal))
   Navigation.registerComponent(SYNC_MODE_MODAL, () => WrappedComponent(SyncModeModal))
+  Navigation.registerComponent(DOWNLOAD_MODAL, () => WrappedComponent(DownloadModal))
+  Navigation.registerComponent(DOWNLOAD_MANAGER_MODAL, () => WrappedComponent(DownloadManagerModal))
   // Navigation.registerComponent(SETTING_SCREEN, () => WrappedComponent(Setting))
 
   console.info('All screens have been registered...')

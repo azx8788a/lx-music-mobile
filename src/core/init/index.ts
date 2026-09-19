@@ -3,11 +3,13 @@ import registerPlaybackService from '@/plugins/player/service'
 import initTheme from './theme'
 import initI18n from './i18n'
 import initUserApi from './userApi'
+import initBuiltinUserApis from './userApi/builtin'
 import initPlayer from './player'
 import dataInit from './dataInit'
 import initSync from './sync'
 import initCommonState from './common'
 import { initDeeplink } from './deeplink'
+import { initDownload } from '@/core/download'
 import { setApiSource } from '@/core/apiSource'
 import commonActions from '@/store/common/action'
 import settingState from '@/store/setting/state'
@@ -48,7 +50,9 @@ export default async() => {
   await initUserApi(setting)
   bootLog('User Api inited.')
 
-  setApiSource(setting['common.apiSource'])
+  const builtinApiId = await initBuiltinUserApis()
+
+  setApiSource(setting['common.apiSource'] ?? builtinApiId ?? '')
   bootLog('Api inited.')
 
   registerPlaybackService()
@@ -57,6 +61,8 @@ export default async() => {
   bootLog('Player inited.')
   await dataInit(setting)
   bootLog('Data inited.')
+  await initDownload()
+  bootLog('Download inited.')
   await initCommonState(setting)
   bootLog('Common State inited.')
 

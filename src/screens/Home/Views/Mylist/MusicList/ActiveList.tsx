@@ -9,6 +9,7 @@ import listState from '@/store/list/state'
 import { createStyle } from '@/utils/tools'
 import { getListPrevSelectId } from '@/utils/data'
 import { setActiveList } from '@/core/list'
+import { openDownloadManager } from '@/core/download'
 import Text from '@/components/common/Text'
 import { LIST_IDS } from '@/config/constant'
 import Loading from '@/components/common/Loading'
@@ -65,6 +66,9 @@ export default forwardRef<ActiveListType, ActiveListProps>(({ onShowSearchBar, o
       <Text style={styles.currentListText} numberOfLines={1} color={theme['c-button-font']}>{currentListName}</Text>
       <TouchableOpacity style={styles.currentListBtns} onPress={onShowSearchBar}>
         <Icon color={theme['c-button-font']} name="search-2" />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.currentListBtns} onPress={openDownloadManager}>
+        <Icon color={theme['c-button-font']} name="download-2" />
       </TouchableOpacity>
     </TouchableOpacity>
   )

@@ -4,6 +4,9 @@ import Theme from '../Theme'
 import Section from '../../components/Section'
 import Source from './Source'
 import SourceName from './SourceName'
+import DownloadSavePath from './DownloadSavePath'
+import DownloadQuality from './DownloadQuality'
+import DownloadFileName from './DownloadFileName'
 import Language from './Language'
 import FontSize from './FontSize'
 import ShareType from './ShareType'
@@ -39,6 +42,9 @@ export default memo(() => {
       <Language />
       <FontSize />
       <ShareType />
+      <DownloadSavePath />
+      <DownloadQuality />
+      <DownloadFileName />
       <Source />
       <SourceName />
     </Section>

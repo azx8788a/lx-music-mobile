@@ -4,6 +4,7 @@ import Menu, { type Menus, type MenuType, type Position } from '@/components/com
 import { hasDislike } from '@/core/dislikeList'
 import { existsFile } from '@/utils/fs'
 import { hasMusicUrlByMusic } from '@/utils/data'
+import { createDownloadTasks, selectAndDownload } from '@/core/download'
 
 export interface SelectInfo {
   musicInfo: LX.Music.MusicInfo
@@ -71,7 +72,7 @@ export default forwardRef<ListMenuType, ListMenuProps>((props, ref) => {
     const menu = [
       { action: 'play', label: t('play') },
       { action: 'playLater', label: t('play_later') },
-      // { action: 'download', label: '下载' },
+      { action: 'download', disabled: isLocal, label: t('download') },
       { action: 'add', label: t('add_to') },
       { action: 'move', label: t('move_to') },
       { action: 'changePosition', label: t('change_position') },
@@ -113,6 +114,16 @@ export default forwardRef<ListMenuType, ListMenuProps>((props, ref) => {
         props.onPlayLater(selectInfo)
 
         break
+      case 'download': {
+        const onlineList = selectInfo.selectedList.filter(i => i.source != 'local')
+        if (!onlineList.length) return
+        if (onlineList.length == 1) {
+          selectAndDownload(onlineList[0])
+        } else {
+          void createDownloadTasks(onlineList)
+        }
+        break
+      }
       case 'add':
         props.onAdd(selectInfo)
         // isMoveRef.current = false

@@ -352,6 +352,16 @@ declare global {
       'download.fileName': '歌名 - 歌手' | '歌手 - 歌名' | '歌名'
 
       /**
+       * 下载保存路径，空字符串表示使用默认路径（外置存储/Music）
+       */
+      'download.savePath': string
+
+      /**
+       * 下载音质
+       */
+      'download.quality': LX.Quality
+
+      /**
        * 是否启用同步
        */
       'sync.enable': boolean
