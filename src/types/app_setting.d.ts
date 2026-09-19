@@ -32,9 +32,14 @@ declare global {
       'common.shareType': 'system' | 'clipboard'
 
       /**
-       * 是否同意软件协议
-       */
+             * 是否签署许可协议
+             */
       'common.isAgreePact': boolean
+
+      /**
+             * 是否已确认修改版公告
+             */
+      'common.isAgreeModNotice': boolean
 
       /**
        * 是否在键盘弹出时隐藏播放栏

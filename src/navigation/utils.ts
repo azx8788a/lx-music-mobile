@@ -5,6 +5,7 @@ import {
   SYNC_MODE_MODAL,
   DOWNLOAD_MODAL,
   DOWNLOAD_MANAGER_MODAL,
+  MOD_NOTICE_MODAL,
 } from './screenNames'
 import themeState from '@/store/theme/state'
 
@@ -18,6 +19,36 @@ export const dismissOverlay = async(compId: string) => Navigation.dismissOverlay
 export const pop = async(compId: string) => Navigation.pop(compId)
 export const popToRoot = async(compId: string) => Navigation.popToRoot(compId)
 export const popTo = async(compId: string) => Navigation.popTo(compId)
+
+export const showModNoticeModal = () => {
+  const theme = themeState.theme
+  const now = Date.now()
+  if (lastOverlayShowTime[MOD_NOTICE_MODAL] && now - lastOverlayShowTime[MOD_NOTICE_MODAL] < 300) return
+  lastOverlayShowTime[MOD_NOTICE_MODAL] = now
+
+  void Navigation.showOverlay({
+    component: {
+      name: MOD_NOTICE_MODAL,
+      options: {
+        layout: {
+          componentBackgroundColor: 'transparent',
+        },
+        overlay: {
+          interceptTouchOutside: true,
+        },
+        statusBar: {
+          drawBehind: true,
+          visible: true,
+          style: getStatusBarStyle(theme.isDark),
+          backgroundColor: 'transparent',
+        },
+        navigationBar: {
+          backgroundColor: theme['c-content-background'],
+        },
+      },
+    },
+  })
+}
 
 export const showDownloadModal = () => {
   const theme = themeState.theme

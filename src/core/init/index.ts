@@ -11,6 +11,7 @@ import initCommonState from './common'
 import { initDeeplink } from './deeplink'
 import { initDownload } from '@/core/download'
 import { setApiSource } from '@/core/apiSource'
+import { showModNoticeModal } from '@/navigation/utils'
 import commonActions from '@/store/common/action'
 import settingState from '@/store/setting/state'
 import { checkUpdate } from '@/core/version'
@@ -23,6 +24,11 @@ const handlePushedHomeScreen = async() => {
   if (settingState.setting['common.isAgreePact']) {
     if (isFirstPush) {
       isFirstPush = false
+      // 已签署原版协议但尚未确认修改版公告的用户（如从原版升级而来），先展示本修改版公告
+      if (!settingState.setting['common.isAgreeModNotice']) {
+        showModNoticeModal()
+        return
+      }
       void checkUpdate()
       void initDeeplink()
     }
