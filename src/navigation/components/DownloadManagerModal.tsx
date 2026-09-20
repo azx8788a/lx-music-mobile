@@ -21,7 +21,7 @@ const TaskRow = ({ task }: { task: LX.Download.ListItem }) => {
     case 'run': statusText = `${t('download_status_downloading')} ${Math.floor(task.progress * 100)}%`; break
     case 'pause': statusText = t('download_status_pause'); break
     case 'completed': statusText = t('download_status_completed'); break
-    case 'error': statusText = `${t('download_status_error')}${task.statusText ? `: ${task.statusText}` : ''}`; break
+    case 'error': statusText = `${t('download_status_error')}${task.errorCode ? ` [${task.errorCode}]` : ''}${task.statusText ? `: ${task.statusText}` : ''}`; break
   }
 
   return (

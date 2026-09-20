@@ -44,6 +44,10 @@ declare namespace LX {
       isComplate: boolean
       status: DownloadTaskStatus
       statusText: string
+      /** 下载失败时的错误码，如 DL_FS_001 */
+      errorCode?: string
+      /** 下载失败时的阶段，如 get-url / prepare-dir / download / move */
+      errorPhase?: string
       downloaded: number
       total: number
       progress: number

@@ -89,10 +89,12 @@ export default forwardRef<ListMenuType, ListMenuProps>((props: ListMenuProps, re
         props.onPlayLater(selectInfo)
         break
       case 'download': {
-        if (selectInfo.selectedList.length == 1) {
-          selectAndDownload(selectInfo.musicInfo)
+        // 普通模式（未多选）时 selectedList 为空，此时下载当前歌曲
+        const list = selectInfo.selectedList.length ? selectInfo.selectedList : [selectInfo.musicInfo]
+        if (list.length == 1) {
+          selectAndDownload(list[0])
         } else {
-          void createDownloadTasks(selectInfo.selectedList)
+          void createDownloadTasks(list)
         }
         break
       }

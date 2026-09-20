@@ -115,12 +115,13 @@ export default forwardRef<ListMenuType, ListMenuProps>((props, ref) => {
 
         break
       case 'download': {
-        const onlineList = selectInfo.selectedList.filter(i => i.source != 'local')
-        if (!onlineList.length) return
-        if (onlineList.length == 1) {
-          selectAndDownload(onlineList[0])
+        // 普通模式（未多选）时 selectedList 为空，此时下载当前歌曲
+        const list = (selectInfo.selectedList.length ? selectInfo.selectedList : [selectInfo.musicInfo]).filter(i => i.source != 'local')
+        if (!list.length) return
+        if (list.length == 1) {
+          selectAndDownload(list[0])
         } else {
-          void createDownloadTasks(onlineList)
+          void createDownloadTasks(list)
         }
         break
       }
