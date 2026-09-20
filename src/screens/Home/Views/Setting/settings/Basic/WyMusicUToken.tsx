@@ -10,7 +10,8 @@ import { useSettingValue } from '@/store/setting/hook'
 import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
 import { updateSetting } from '@/core/common'
-import { showWyLoginModal } from '@/navigation/utils'
+import { showWyLoginModal, showWyQrLoginModal } from '@/navigation/utils'
+import { log } from '@/utils/log'
 
 const getUserNickname = (userInfo: string) => {
   if (!userInfo) return ''
@@ -37,10 +38,13 @@ export default memo(() => {
   }
   const handleConfirm = () => {
     dialogRef.current?.setVisible(false)
-    updateSetting({ 'wy.musicUToken': text.trim() })
+    const value = text.trim()
+    updateSetting({ 'wy.musicUToken': value })
+    log.info(`[WY] 手动保存登录 Token（长度: ${value.length}）`)
   }
   const handleLogout = () => {
     updateSetting({ 'wy.musicUToken': '', 'wy.userInfo': '' })
+    log.info('[WY] 已退出网易云登录')
   }
 
   return (
@@ -54,11 +58,14 @@ export default memo(() => {
           </Text>
           <TouchableOpacity onPress={showWyLoginModal}>
             <Text color={theme['c-primary-font']}>
-              {token ? t('setting_basic_wy_musicu_relogin') : t('setting_basic_wy_musicu_scan_login')}
+              {token ? t('setting_basic_wy_musicu_relogin') : t('setting_basic_wy_musicu_web_login')}
             </Text>
           </TouchableOpacity>
         </View>
         <View style={styles.linkRow}>
+          <TouchableOpacity style={styles.link} onPress={showWyQrLoginModal}>
+            <Text size={12} style={styles.linkText}>{t('setting_basic_wy_musicu_qr_login')}</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.link} onPress={handleShowEdit}>
             <Text size={12} style={styles.linkText}>{t('setting_basic_wy_musicu_manual_edit')}</Text>
           </TouchableOpacity>

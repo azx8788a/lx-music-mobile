@@ -8,6 +8,7 @@ import {
   MOD_NOTICE_MODAL,
   WY_USER_PLAYLIST_MODAL,
   WY_LOGIN_MODAL,
+  WY_QR_LOGIN_MODAL,
 } from './screenNames'
 import themeState from '@/store/theme/state'
 
@@ -31,6 +32,36 @@ export const showWyLoginModal = () => {
   void Navigation.showOverlay({
     component: {
       name: WY_LOGIN_MODAL,
+      options: {
+        layout: {
+          componentBackgroundColor: 'transparent',
+        },
+        overlay: {
+          interceptTouchOutside: true,
+        },
+        statusBar: {
+          drawBehind: true,
+          visible: true,
+          style: getStatusBarStyle(theme.isDark),
+          backgroundColor: 'transparent',
+        },
+        navigationBar: {
+          backgroundColor: theme['c-content-background'],
+        },
+      },
+    },
+  })
+}
+
+export const showWyQrLoginModal = () => {
+  const theme = themeState.theme
+  const now = Date.now()
+  if (lastOverlayShowTime[WY_QR_LOGIN_MODAL] && now - lastOverlayShowTime[WY_QR_LOGIN_MODAL] < 300) return
+  lastOverlayShowTime[WY_QR_LOGIN_MODAL] = now
+
+  void Navigation.showOverlay({
+    component: {
+      name: WY_QR_LOGIN_MODAL,
       options: {
         layout: {
           componentBackgroundColor: 'transparent',

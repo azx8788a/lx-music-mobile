@@ -10,6 +10,7 @@ export const DOWNLOAD_MANAGER_MODAL = 'lxm.DownloadManagerModal'
 export const MOD_NOTICE_MODAL = 'lxm.ModNoticeModal'
 export const WY_USER_PLAYLIST_MODAL = 'lxm.WyUserPlaylistModal'
 export const WY_LOGIN_MODAL = 'lxm.WyLoginModal'
+export const WY_QR_LOGIN_MODAL = 'lxm.WyQrLoginModal'
 // export const SETTING_SCREEN = 'lxm.SettingScreen'
 // export const TOAST_SCREEN = 'lxm.ToastScreen'
 

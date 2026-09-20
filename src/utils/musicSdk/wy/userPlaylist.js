@@ -36,10 +36,14 @@ const retryOnFail = (handler, tryNum = 0) => {
  */
 export const getLoginStatus = async(token) => {
   const { statusCode, body } = await retryOnFail(() => request('/weapi/w/nuser/account/get', {}, token))
-  if (statusCode !== 200) throw new Error(`请求失败 (code: ${statusCode})`)
-  if (body.code !== successCode) throw new Error(body.message ?? '登录状态获取失败')
+  if (statusCode !== 200) throw new Error(`获取登录态请求失败 (statusCode: ${statusCode})`)
+  if (body.code !== successCode) throw new Error(`获取登录态失败 (code: ${body.code}, message: ${body.message ?? '-'})`)
   const profile = body.data?.profile ?? body.profile
-  if (!profile?.userId) throw new Error('未获取到用户信息')
+  if (!profile?.userId) {
+    const err = new Error('未获取到用户信息')
+    err.code = 'INVALID_TOKEN'
+    throw err
+  }
   return profile
 }
 
@@ -48,7 +52,7 @@ export const getLoginStatus = async(token) => {
  */
 export const getUserPlaylistList = async({ uid, token }) => {
   const { statusCode, body } = await retryOnFail(() => request('/weapi/user/playlist', { uid, offset: 0, limit: 1000, includeVideo: 'true' }, token))
-  if (statusCode !== 200) throw new Error(`请求失败 (code: ${statusCode})`)
-  if (body.code !== successCode) throw new Error(body.message ?? '歌单列表获取失败')
+  if (statusCode !== 200) throw new Error(`获取歌单列表请求失败 (statusCode: ${statusCode})`)
+  if (body.code !== successCode) throw new Error(`获取歌单列表失败 (code: ${body.code}, message: ${body.message ?? '-'})`)
   return body.playlist
 }

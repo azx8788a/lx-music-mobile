@@ -12,7 +12,8 @@ import { useI18n } from '@/lang'
 import { useSettingValue } from '@/store/setting/hook'
 import commonState from '@/store/common/state'
 import { getUserPlaylistList, getLoginStatus } from '@/utils/musicSdk/wy/userPlaylist'
-import { showWyLoginModal } from '@/navigation/utils'
+import { showWyLoginModal, showWyQrLoginModal } from '@/navigation/utils'
+import { log } from '@/utils/log'
 import { navigations } from '@/navigation'
 
 
@@ -38,6 +39,7 @@ const Content = ({ componentId }: { componentId: string }) => {
       return
     }
     setStatus('loading')
+    log.info('[WY 歌单] 开始获取歌单列表')
     Promise.resolve()
       .then(async() => {
         const profile = await getLoginStatus(token)
@@ -52,9 +54,10 @@ const Content = ({ componentId }: { componentId: string }) => {
             img: item.coverImgUrl ?? '',
           }))
         setStatus('list')
+        log.info(`[WY 歌单] 歌单获取成功，共 ${playlists.length} 个（uid: ${profile.userId}）`)
       })
       .catch(err => {
-        console.log(err.message)
+        log.warn(`[WY 歌单] 歌单获取失败: ${(err as Error).message}`)
         setStatus('error')
       })
   }
@@ -67,6 +70,10 @@ const Content = ({ componentId }: { componentId: string }) => {
 
   const handleLogin = () => {
     showWyLoginModal()
+  }
+
+  const handleQrLogin = () => {
+    showWyQrLoginModal()
   }
 
   const handleOpen = (item: PlaylistInfo) => {
@@ -101,9 +108,14 @@ const Content = ({ componentId }: { componentId: string }) => {
             ? <View style={styles.center}>
                 <Text size={13} style={styles.tipText}>{t('wy_playlist_token_empty')}</Text>
                 <Text size={13} style={styles.tipText}>{t('wy_playlist_token_guide')}</Text>
-                <Button style={{ ...styles.smallBtn, ...styles.smallBtnLast, backgroundColor: theme['c-button-background'] }} onPress={handleLogin}>
-                  <Text color={theme['c-button-font']}>{t('wy_playlist_login')}</Text>
-                </Button>
+                <View style={styles.btnRow}>
+                  <Button style={{ ...styles.smallBtn, backgroundColor: theme['c-button-background'] }} onPress={handleLogin}>
+                    <Text color={theme['c-button-font']}>{t('wy_playlist_login')}</Text>
+                  </Button>
+                  <Button style={{ ...styles.smallBtn, ...styles.smallBtnLast, backgroundColor: theme['c-button-background'] }} onPress={handleQrLogin}>
+                    <Text color={theme['c-button-font']}>{t('wy_playlist_qr_login')}</Text>
+                  </Button>
+                </View>
               </View>
             : null
         }

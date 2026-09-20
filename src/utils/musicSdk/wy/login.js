@@ -27,8 +27,8 @@ const request = (path, data) => {
  */
 export const getQrKey = async() => {
   const { statusCode, body } = await request('/weapi/login/qrcode/unikey', { type: 1 })
-  if (statusCode !== 200) throw new Error(`请求失败 (code: ${statusCode})`)
-  if (body.code !== successCode || !body.unikey) throw new Error(body.message ?? '获取二维码失败')
+  if (statusCode !== 200) throw new Error(`获取 unikey 请求失败 (statusCode: ${statusCode})`)
+  if (body.code !== successCode || !body.unikey) throw new Error(`获取 unikey 失败 (code: ${body.code}, message: ${body.message ?? '-'})`)
   return body.unikey
 }
 
@@ -66,7 +66,7 @@ const pickMusicU = rawHeaders => {
  */
 export const checkQrStatus = async unikey => {
   const { statusCode, body, headers } = await request('/weapi/login/qrcode/client/login', { key: unikey, type: 1 })
-  if (statusCode !== 200) throw new Error(`请求失败 (code: ${statusCode})`)
+  if (statusCode !== 200) throw new Error(`扫码状态检查请求失败 (statusCode: ${statusCode})`)
   return {
     ...body,
     musicU: body.code === 803 ? pickMusicU(headers) : '',

@@ -1,80 +1,47 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { View, Image } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { View, StatusBar } from 'react-native'
 import { Navigation } from 'react-native-navigation'
+import WebView from 'react-native-webview'
+import type { WebViewErrorEvent } from 'react-native-webview/lib/WebViewTypes'
 
 import Button from '@/components/common/Button'
-import ModalContent from './ModalContent'
 import Text from '@/components/common/Text'
 import Loading from '@/components/common/Loading'
 import { createStyle, toast } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
 import { updateSetting } from '@/core/common'
-import { getQrKey, getQrUrl, checkQrStatus } from '@/utils/musicSdk/wy/login'
 import { getLoginStatus } from '@/utils/musicSdk/wy/userPlaylist'
-import qrcode from '@/utils/qrcode'
+import { getWebViewCookie, flushWebViewCookie } from '@/utils/nativeModules/cookie'
+import { log } from '@/utils/log'
 
-const POLL_INTERVAL = 2000
-const QR_SIZE = 200
+// 网易云音乐移动版登录页
+const WY_LOGIN_URL = 'https://music.163.com/m/login'
+// 登录成功后 Cookie 可能落在任一域名下，逐个检查
+const COOKIE_URLS = ['https://music.163.com', 'https://y.music.163.com']
+const CHECK_INTERVAL = 1500
 
-// 将二维码矩阵按行合并连续的黑块渲染，减少 View 数量
-const QrCodeView = ({ text, size = QR_SIZE }: { text: string, size?: number }) => {
-  const { count, cells } = useMemo(() => {
-    const qr = qrcode(0, 'M')
-    qr.addData(text)
-    qr.make()
-    const moduleCount = qr.getModuleCount()
-    const cellList: Array<{ left: number, top: number, width: number }> = []
-    for (let r = 0; r < moduleCount; r++) {
-      let c = 0
-      while (c < moduleCount) {
-        if (!qr.isDark(r, c)) {
-          c++
-          continue
-        }
-        let len = 0
-        while (c + len < moduleCount && qr.isDark(r, c + len)) len++
-        cellList.push({ left: c, top: r, width: len })
-        c += len
-      }
-    }
-    return { count: moduleCount, cells: cellList }
-  }, [text])
-
-  const cellSize = Math.floor(size / count)
-  return (
-    <View style={{ width: cellSize * count, height: cellSize * count, backgroundColor: '#fff' }}>
-      {
-        cells.map((cell, index) => (
-          <View
-            key={index}
-            style={{
-              position: 'absolute',
-              left: cell.left * cellSize,
-              top: cell.top * cellSize,
-              width: cell.width * cellSize,
-              height: cellSize,
-              backgroundColor: '#000',
-            }}
-          />
-        ))
-      }
-    </View>
-  )
+// 从 "name=value; name2=value2" 形式的 Cookie 字符串中提取 MUSIC_U
+const pickMusicU = (cookie: string) => {
+  const matches = cookie.match(/MUSIC_U=[^;\s]+/g) ?? []
+  let musicU = ''
+  for (const item of matches) {
+    const value = item.substring(8)
+    if (value) musicU = value
+  }
+  return musicU
 }
-
-type LoginStatus = 'loading' | 'waiting' | 'scanned' | 'expired' | 'error'
 
 const WyLoginModal = ({ componentId }: { componentId: string }) => {
   const theme = useTheme()
   const t = useI18n()
-  const [status, setStatus] = useState<LoginStatus>('loading')
-  const [qrUrl, setQrUrl] = useState('')
-  const [scannedInfo, setScannedInfo] = useState<{ nickname: string, avatarUrl: string } | null>(null)
+  const [loadError, setLoadError] = useState(false)
   const canceledRef = useRef(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  // 当前有效的二维码 key，用于丢弃旧二维码的延迟响应
-  const unikeyRef = useRef('')
+  // 已验证为失效的 MUSIC_U，避免对同一个失效 Cookie 重复验证
+  const lastInvalidRef = useRef('')
+  // 上次读取 Cookie 失败的错误信息，避免重复写相同日志
+  const lastReadErrorRef = useRef('')
 
   const clearTimer = () => {
     if (timerRef.current !== null) {
@@ -83,93 +50,71 @@ const WyLoginModal = ({ componentId }: { componentId: string }) => {
     }
   }
 
-  const handleSuccess = async(musicU: string) => {
-    let userInfo = {
-      uid: '',
-      nickname: scannedInfo?.nickname ?? '',
-      avatarUrl: scannedInfo?.avatarUrl ?? '',
-    }
-    // 登录成功后补全用户信息
-    try {
-      const profile = await getLoginStatus(musicU)
-      userInfo = {
-        uid: String(profile.userId ?? ''),
-        nickname: profile.nickname ?? userInfo.nickname,
-        avatarUrl: profile.avatarUrl ?? userInfo.avatarUrl,
-      }
-    } catch (err) {
-      console.log('get wy profile fail', (err as Error).message)
-    }
+  const handleSuccess = async(musicU: string, userInfo: { uid: string, nickname: string, avatarUrl: string }) => {
+    // 将 WebView 中的 Cookie 落盘，下次打开 App 时浏览器内仍是登录状态
+    void flushWebViewCookie()
     // 保存登录状态，下次打开直接使用
     updateSetting({
       'wy.musicUToken': musicU,
       'wy.userInfo': JSON.stringify(userInfo),
     })
+    log.info(`[WY 网页登录] 登录成功，uid: ${userInfo.uid || '-'}，nickname: ${userInfo.nickname || '-'}`)
     toast(t('wy_login_success'))
     void Navigation.dismissOverlay(componentId)
   }
 
-  const handleQrStatus = async(unikey: string) => {
-    if (unikey !== unikeyRef.current) return
+  // 先验证 Cookie 有效性再保存，避免保存残留的失效登录状态
+  const trySaveCookie = async(musicU: string): Promise<boolean> => {
+    log.info(`[WY 网页登录] 检测到 MUSIC_U（长度: ${musicU.length}），验证登录态...`)
     try {
-      const body = await checkQrStatus(unikey)
-      if (canceledRef.current || unikey !== unikeyRef.current) return
-      switch (body.code) {
-        case 800: // 二维码过期
-          setStatus('expired')
-          return
-        case 801: // 等待扫码
-          setStatus('waiting')
-          break
-        case 802: // 已扫码，等待手机确认
-          setScannedInfo({ nickname: body.nickname ?? '', avatarUrl: body.avatarUrl ?? '' })
-          setStatus('scanned')
-          break
-        case 803: // 登录成功
-          if (body.musicU) {
-            await handleSuccess(body.musicU)
-            return
-          }
-          setStatus('error')
-          return
-        default:
-          setStatus('error')
-          return
-      }
+      const profile = await getLoginStatus(musicU)
+      if (canceledRef.current) return true
+      await handleSuccess(musicU, {
+        uid: String(profile.userId ?? ''),
+        nickname: profile.nickname ?? '',
+        avatarUrl: profile.avatarUrl ?? '',
+      })
+      return true
     } catch (err) {
-      if (canceledRef.current) return
-      // 网络波动时继续轮询，避免中断登录流程
-      console.log('check wy qr status fail', (err as Error).message)
-    }
-    if (!canceledRef.current && unikey === unikeyRef.current) {
-      timerRef.current = setTimeout(() => { void handleQrStatus(unikey) }, POLL_INTERVAL)
+      const message = (err as Error).message
+      // 仅当确认是登录态无效时才跳过该 Cookie，网络错误下一轮重试
+      if ((err as { code?: string }).code === 'INVALID_TOKEN') {
+        log.warn('[WY 网页登录] Cookie 中的登录态已失效，等待用户在页面中登录')
+        lastInvalidRef.current = musicU
+      } else {
+        log.warn(`[WY 网页登录] 验证登录态失败（${message}），稍后重试`)
+      }
+      return false
     }
   }
 
-  const handleRefresh = () => {
-    clearTimer()
-    setScannedInfo(null)
-    setStatus('loading')
-    unikeyRef.current = ''
-    Promise.resolve()
-      .then(async() => {
-        const unikey = await getQrKey()
-        if (canceledRef.current) return
-        unikeyRef.current = unikey
-        setQrUrl(getQrUrl(unikey))
-        setStatus('waiting')
-        timerRef.current = setTimeout(() => { void handleQrStatus(unikey) }, POLL_INTERVAL)
-      })
-      .catch(err => {
-        if (canceledRef.current) return
-        console.log('get wy qr key fail', err.message)
-        setStatus('error')
-      })
+  const checkLoginStatus = async() => {
+    let done = false
+    try {
+      for (const url of COOKIE_URLS) {
+        const cookie = await getWebViewCookie(url)
+        const musicU = pickMusicU(cookie)
+        if (musicU && musicU !== lastInvalidRef.current) {
+          done = await trySaveCookie(musicU)
+          if (done) break
+        }
+      }
+    } catch (err) {
+      const msg = (err as Error).message
+      if (lastReadErrorRef.current !== msg) {
+        lastReadErrorRef.current = msg
+        log.warn(`[WY 网页登录] 读取 Cookie 失败: ${msg}`)
+      }
+    }
+    if (!canceledRef.current && !done) {
+      timerRef.current = setTimeout(() => { void checkLoginStatus() }, CHECK_INTERVAL)
+    }
   }
 
   useEffect(() => {
     canceledRef.current = false
-    handleRefresh()
+    log.info(`[WY 网页登录] 打开登录页: ${WY_LOGIN_URL}`)
+    timerRef.current = setTimeout(() => { void checkLoginStatus() }, CHECK_INTERVAL)
     return () => {
       canceledRef.current = true
       clearTimer()
@@ -177,109 +122,98 @@ const WyLoginModal = ({ componentId }: { componentId: string }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // 加载失败时通过重新挂载 WebView 触发重新加载
+  const handleReload = () => {
+    setLoadError(false)
+  }
+
   const handleClose = () => {
     void Navigation.dismissOverlay(componentId)
   }
 
+  const statusBarHeight = StatusBar.currentHeight ?? 24
+
   return (
-    <ModalContent>
-      <View style={styles.main}>
-        <Text style={styles.title} size={18}>{t('wy_login_modal_title')}</Text>
+    <View style={{ ...styles.container, backgroundColor: theme['c-content-background'] }}>
+      <View style={{ ...styles.header, paddingTop: statusBarHeight + 8, backgroundColor: theme['c-primary-light-100-alpha-100'] }}>
+        <Text style={styles.title} size={16}>{t('wy_web_login_modal_title')}</Text>
+      </View>
+      <View style={styles.webWrap}>
         {
-          status === 'loading'
-            ? <View style={styles.center}><Loading /></View>
-            : null
-        }
-        {
-          status === 'waiting' || status === 'scanned'
-            ? <>
-                <View style={styles.qrWrap}>
-                  <QrCodeView text={qrUrl} />
-                </View>
-                <View style={styles.center}>
-                  {
-                    status === 'scanned' && scannedInfo
-                      ? <View style={styles.scannedRow}>
-                          {scannedInfo.avatarUrl
-                            ? <Image style={styles.avatar} source={{ uri: scannedInfo.avatarUrl }} />
-                            : null}
-                          <View style={styles.scannedInfo}>
-                            {scannedInfo.nickname ? <Text size={13} numberOfLines={1}>{scannedInfo.nickname}</Text> : null}
-                            <Text size={12} style={styles.tipText} numberOfLines={2}>{t('wy_login_scanned')}</Text>
-                          </View>
-                        </View>
-                      : <Text size={13} style={styles.tipText}>{t('wy_login_tip_scan')}</Text>
-                  }
-                </View>
-              </>
-            : null
-        }
-        {
-          status === 'expired' || status === 'error'
+          loadError
             ? <View style={styles.center}>
-                <Text size={13} style={styles.tipText}>{status === 'expired' ? t('wy_login_expired') : t('wy_login_load_fail')}</Text>
-                <Button style={{ ...styles.retryBtn, backgroundColor: theme['c-button-background'] }} onPress={handleRefresh}>
-                  <Text color={theme['c-button-font']}>{t('wy_login_refresh')}</Text>
+                <Text size={13} style={styles.tipText}>{t('wy_web_login_load_fail')}</Text>
+                <Button style={{ ...styles.retryBtn, backgroundColor: theme['c-button-background'] }} onPress={handleReload}>
+                  <Text color={theme['c-button-font']}>{t('wy_web_login_reload')}</Text>
                 </Button>
               </View>
-            : null
+            : <WebView
+                source={{ uri: WY_LOGIN_URL }}
+                style={styles.webview}
+                domStorageEnabled={true}
+                javaScriptEnabled={true}
+                setSupportMultipleWindows={false}
+                startInLoadingState={true}
+                renderLoading={() => (
+                  <View style={{ ...styles.loadingWrap, backgroundColor: theme['c-content-background'] }}>
+                    <Loading />
+                  </View>
+                )}
+                onError={(event: WebViewErrorEvent): void => {
+                  const { description, url } = event.nativeEvent
+                  log.error(`[WY 网页登录] 登录页加载失败: ${description ?? '-'}（${url}）`)
+                  setLoadError(true)
+                }}
+              />
         }
       </View>
-      <View style={styles.btns}>
-        <Button style={{ ...styles.btn, backgroundColor: theme['c-button-background'] }} onPress={handleClose}>
-          <Text color={theme['c-button-font']}>{t('close')}</Text>
-        </Button>
+      <View style={styles.footer}>
+        <Text size={12} style={styles.tipText}>{t('wy_web_login_tip')}</Text>
+        <View style={styles.btns}>
+          <Button style={{ ...styles.btn, backgroundColor: theme['c-button-background'] }} onPress={handleClose}>
+            <Text color={theme['c-button-font']}>{t('close')}</Text>
+          </Button>
+        </View>
       </View>
-    </ModalContent>
+    </View>
   )
 }
 
 const styles = createStyle({
-  main: {
-    flexShrink: 1,
-    marginTop: 15,
-    marginBottom: 10,
-    paddingLeft: 25,
-    paddingRight: 25,
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexGrow: 0,
+    flexShrink: 0,
+    paddingBottom: 10,
+    alignItems: 'center',
   },
   title: {
     textAlign: 'center',
-    marginBottom: 10,
+  },
+  webWrap: {
+    flex: 1,
+  },
+  webview: {
+    flex: 1,
+  },
+  loadingWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   center: {
+    flex: 1,
     alignItems: 'center',
-    paddingBottom: 5,
+    justifyContent: 'center',
+    padding: 20,
   },
   tipText: {
     textAlign: 'center',
     opacity: 0.7,
     lineHeight: 20,
     marginBottom: 5,
-  },
-  qrWrap: {
-    alignSelf: 'center',
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 4,
-    marginTop: 5,
-    marginBottom: 10,
-  },
-  scannedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingLeft: 10,
-    paddingRight: 10,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-    backgroundColor: 'rgba(128,128,128,0.2)',
-  },
-  scannedInfo: {
-    flexShrink: 1,
   },
   retryBtn: {
     marginTop: 10,
@@ -289,11 +223,17 @@ const styles = createStyle({
     paddingRight: 20,
     borderRadius: 4,
   },
+  footer: {
+    flexGrow: 0,
+    flexShrink: 0,
+    paddingTop: 8,
+    paddingLeft: 15,
+    paddingRight: 15,
+  },
   btns: {
     flexDirection: 'row',
     justifyContent: 'center',
     paddingBottom: 15,
-    paddingLeft: 15,
   },
   btn: {
     flex: 1,
@@ -303,7 +243,6 @@ const styles = createStyle({
     paddingRight: 10,
     alignItems: 'center',
     borderRadius: 4,
-    marginRight: 15,
   },
 })
 

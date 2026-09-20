@@ -24,6 +24,7 @@ import {
   MOD_NOTICE_MODAL,
   WY_USER_PLAYLIST_MODAL,
   WY_LOGIN_MODAL,
+  WY_QR_LOGIN_MODAL,
   // SETTING_SCREEN,
 } from './screenNames'
 import VersionModal from './components/VersionModal'
@@ -34,6 +35,7 @@ import DownloadManagerModal from './components/DownloadManagerModal'
 import ModNoticeModal from './components/ModNoticeModal'
 import WyUserPlaylistModal from './components/WyUserPlaylistModal'
 import WyLoginModal from './components/WyLoginModal'
+import WyQrLoginModal from './components/WyQrLoginModal'
 
 function WrappedComponent(Component: any) {
   return function inject(props: Record<string, any>) {
@@ -62,6 +64,7 @@ export default () => {
   Navigation.registerComponent(MOD_NOTICE_MODAL, () => WrappedComponent(ModNoticeModal))
   Navigation.registerComponent(WY_USER_PLAYLIST_MODAL, () => WrappedComponent(WyUserPlaylistModal))
   Navigation.registerComponent(WY_LOGIN_MODAL, () => WrappedComponent(WyLoginModal))
+  Navigation.registerComponent(WY_QR_LOGIN_MODAL, () => WrappedComponent(WyQrLoginModal))
   // Navigation.registerComponent(SETTING_SCREEN, () => WrappedComponent(Setting))
 
   console.info('All screens have been registered...')
