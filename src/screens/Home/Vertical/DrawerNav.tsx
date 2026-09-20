@@ -51,6 +51,10 @@ const styles = createStyle({
     width: 24,
     alignItems: 'center',
   },
+  placeholderText: {
+    textAlign: 'center',
+    lineHeight: 11,
+  },
   text: {
     paddingLeft: 20,
     // fontWeight: '500',
@@ -74,7 +78,7 @@ type IdType = InitState['navActiveId'] | 'nav_exit' | 'back_home'
 
 const MenuItem = ({ id, icon, onPress }: {
   id: IdType
-  icon: string
+  icon: string | null
   onPress: (id: IdType) => void
 }) => {
   const t = useI18n()
@@ -84,13 +88,13 @@ const MenuItem = ({ id, icon, onPress }: {
   return activeId == id
     ? <View style={styles.menuItem}>
         <View style={styles.iconContent}>
-          <Icon name={icon} size={20} color={theme['c-primary-font-active']} />
+          {icon ? <Icon name={icon} size={20} color={theme['c-primary-font-active']} /> : null}
         </View>
         <Text style={styles.text} color={theme['c-primary-font']}>{t(id)}</Text>
       </View>
     : <TouchableOpacity style={styles.menuItem} onPress={() => { onPress(id) }}>
         <View style={styles.iconContent}>
-          <Icon name={icon} size={20} color={theme['c-font-label']} />
+          {icon ? <Icon name={icon} size={20} color={theme['c-font-label']} /> : null}
         </View>
         <Text style={styles.text}>{t(id)}</Text>
       </TouchableOpacity>

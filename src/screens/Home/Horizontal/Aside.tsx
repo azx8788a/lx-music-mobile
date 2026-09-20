@@ -3,6 +3,8 @@ import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { useNavActiveId, useStatusbarHeight } from '@/store/common/hook'
 import { useTheme } from '@/store/theme/hook'
 import { Icon } from '@/components/common/Icon'
+import Text from '@/components/common/Text'
+import { useI18n } from '@/lang'
 import { confirmDialog, createStyle, exitApp as backHome } from '@/utils/tools'
 import { NAV_MENUS } from '@/config/constant'
 import type { InitState } from '@/store/common/state'
@@ -56,6 +58,11 @@ const styles = createStyle({
     // width: 24,
     // backgroundColor: 'rgba(0, 0, 0, 0.2)',
     alignItems: 'center',
+    maxWidth: NAV_WIDTH - 16,
+  },
+  placeholderText: {
+    textAlign: 'center',
+    lineHeight: 12,
   },
   text: {
     paddingLeft: 15,
@@ -80,23 +87,28 @@ type IdType = InitState['navActiveId'] | 'nav_exit' | 'back_home'
 
 const MenuItem = ({ id, icon, onPress }: {
   id: IdType
-  icon: string
+  icon: string | null
   onPress: (id: IdType) => void
 }) => {
-  // const t = useI18n()
+  const t = useI18n()
   const activeId = useNavActiveId()
   const theme = useTheme()
+
+  // 无图标的菜单项（如网易云歌单）显示文字代替图标
+  const iconNode = icon
+    ? null
+    : <Text size={9} style={styles.placeholderText} numberOfLines={3}>{t(id)}</Text>
 
   return activeId == id
     ? <View style={styles.menuItem}>
         <View style={styles.iconContent}>
-          <Icon name={icon} size={20} color={theme['c-primary-font-active']} />
+          {icon ? <Icon name={icon} size={20} color={theme['c-primary-font-active']} /> : iconNode}
         </View>
         {/* <Text style={styles.text} size={14} color={theme['c-primary-font']}>{t(id)}</Text> */}
       </View>
     : <TouchableOpacity style={styles.menuItem} onPress={() => { onPress(id) }}>
         <View style={styles.iconContent}>
-          <Icon name={icon} size={20} color={theme['c-font-label']} />
+          {icon ? <Icon name={icon} size={20} color={theme['c-font-label']} /> : iconNode}
         </View>
         {/* <Text style={styles.text} size={14}>{t(id)}</Text> */}
       </TouchableOpacity>
