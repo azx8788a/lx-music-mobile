@@ -74,6 +74,7 @@ const defaultSetting: LX.AppSetting = {
   'download.quality': '320k',
 
   'wy.musicUToken': '',
+  'wy.userInfo': '',
 
   'sync.enable': false,
 

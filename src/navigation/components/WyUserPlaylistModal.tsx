@@ -9,9 +9,10 @@ import Loading from '@/components/common/Loading'
 import { createStyle } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
-import settingState from '@/store/setting/state'
+import { useSettingValue } from '@/store/setting/hook'
 import commonState from '@/store/common/state'
 import { getUserPlaylistList, getLoginStatus } from '@/utils/musicSdk/wy/userPlaylist'
+import { showWyLoginModal } from '@/navigation/utils'
 import { navigations } from '@/navigation'
 
 
@@ -28,16 +29,15 @@ let playlists: PlaylistInfo[] = []
 const Content = ({ componentId }: { componentId: string }) => {
   const theme = useTheme()
   const t = useI18n()
-  const token = settingState.setting['wy.musicUToken']
+  const token = useSettingValue('wy.musicUToken')
   const [status, setStatus] = useState(token ? 'loading' : 'emptyToken')
 
   const handleLoad = () => {
-    if (!settingState.setting['wy.musicUToken']) {
+    if (!token) {
       setStatus('emptyToken')
       return
     }
     setStatus('loading')
-    const token = settingState.setting['wy.musicUToken']
     Promise.resolve()
       .then(async() => {
         const profile = await getLoginStatus(token)
@@ -59,10 +59,15 @@ const Content = ({ componentId }: { componentId: string }) => {
       })
   }
 
+  // 登录状态变化（扫码登录成功 / 退出登录）后自动重新加载
   useEffect(() => {
-    if (token) handleLoad()
+    handleLoad()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [token])
+
+  const handleLogin = () => {
+    showWyLoginModal()
+  }
 
   const handleOpen = (item: PlaylistInfo) => {
     if (!commonState.componentIds.home) return
@@ -96,6 +101,9 @@ const Content = ({ componentId }: { componentId: string }) => {
             ? <View style={styles.center}>
                 <Text size={13} style={styles.tipText}>{t('wy_playlist_token_empty')}</Text>
                 <Text size={13} style={styles.tipText}>{t('wy_playlist_token_guide')}</Text>
+                <Button style={{ ...styles.smallBtn, ...styles.smallBtnLast, backgroundColor: theme['c-button-background'] }} onPress={handleLogin}>
+                  <Text color={theme['c-button-font']}>{t('wy_playlist_login')}</Text>
+                </Button>
               </View>
             : null
         }
@@ -103,9 +111,14 @@ const Content = ({ componentId }: { componentId: string }) => {
           status == 'error'
             ? <View style={styles.center}>
                 <Text size={13} style={styles.tipText}>{t('wy_playlist_load_fail')}</Text>
-                <Button style={{ ...styles.retryBtn, backgroundColor: theme['c-button-background'] }} onPress={handleLoad}>
-                  <Text color={theme['c-button-font']}>{t('wy_playlist_retry')}</Text>
-                </Button>
+                <View style={styles.btnRow}>
+                  <Button style={{ ...styles.smallBtn, backgroundColor: theme['c-button-background'] }} onPress={handleLoad}>
+                    <Text color={theme['c-button-font']}>{t('wy_playlist_retry')}</Text>
+                  </Button>
+                  <Button style={{ ...styles.smallBtn, ...styles.smallBtnLast, backgroundColor: theme['c-button-background'] }} onPress={handleLogin}>
+                    <Text color={theme['c-button-font']}>{t('wy_playlist_relogin')}</Text>
+                  </Button>
+                </View>
               </View>
             : null
         }
@@ -162,13 +175,20 @@ const styles = createStyle({
     lineHeight: 20,
     marginBottom: 5,
   },
-  retryBtn: {
+  btnRow: {
+    flexDirection: 'row',
     marginTop: 10,
+  },
+  smallBtn: {
     paddingTop: 8,
     paddingBottom: 8,
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 4,
+    marginRight: 15,
+  },
+  smallBtnLast: {
+    marginRight: 0,
   },
   content: {
     flexGrow: 0,

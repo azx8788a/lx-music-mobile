@@ -372,6 +372,11 @@ declare global {
       'wy.musicUToken': string
 
       /**
+       * 网易云账号信息（JSON 字符串：uid、nickname、avatarUrl），用于展示登录状态
+       */
+      'wy.userInfo': string
+
+      /**
        * 是否启用同步
        */
       'sync.enable': boolean

@@ -1,5 +1,5 @@
-// https://github.com/Binaryify/NeteaseCloudMusicApi/blob/master/module/login_status.js
-// https://github.com/Binaryify/NeteaseCloudMusicApi/blob/master/module/user_playlist.js
+// 登录态：/weapi/w/nuser/account/get（旧路径 /weapi/login/status 已失效）
+// 歌单列表：/weapi/user/playlist（参考 NeteaseCloudMusicApi 的 login_status / user_playlist 模块）
 import { weapi } from './utils/crypto'
 import { httpFetch } from '../../request'
 
@@ -32,9 +32,10 @@ const retryOnFail = (handler, tryNum = 0) => {
 
 /**
  * 获取登录态信息（含 uid）
+ * 注意：原 /weapi/login/status 路径已失效（返回 404 接口未找到），改用 /weapi/w/nuser/account/get
  */
 export const getLoginStatus = async(token) => {
-  const { statusCode, body } = await retryOnFail(() => request('/weapi/login/status', { csrf_token: '' }, token))
+  const { statusCode, body } = await retryOnFail(() => request('/weapi/w/nuser/account/get', {}, token))
   if (statusCode !== 200) throw new Error(`请求失败 (code: ${statusCode})`)
   if (body.code !== successCode) throw new Error(body.message ?? '登录状态获取失败')
   const profile = body.data?.profile ?? body.profile

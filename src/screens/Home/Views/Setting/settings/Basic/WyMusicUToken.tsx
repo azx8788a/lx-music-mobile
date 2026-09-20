@@ -10,14 +10,26 @@ import { useSettingValue } from '@/store/setting/hook'
 import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
 import { updateSetting } from '@/core/common'
+import { showWyLoginModal } from '@/navigation/utils'
 
+const getUserNickname = (userInfo: string) => {
+  if (!userInfo) return ''
+  try {
+    const info = JSON.parse(userInfo) as { nickname?: string }
+    return info.nickname ?? ''
+  } catch {
+    return ''
+  }
+}
 
 export default memo(() => {
   const t = useI18n()
   const theme = useTheme()
   const token = useSettingValue('wy.musicUToken')
+  const userInfo = useSettingValue('wy.userInfo')
   const [text, setText] = useState('')
   const dialogRef = useRef<DialogType>(null)
+  const nickname = getUserNickname(userInfo)
 
   const handleShowEdit = () => {
     setText(token)
@@ -27,28 +39,38 @@ export default memo(() => {
     dialogRef.current?.setVisible(false)
     updateSetting({ 'wy.musicUToken': text.trim() })
   }
-  const handleClear = () => {
-    updateSetting({ 'wy.musicUToken': '' })
+  const handleLogout = () => {
+    updateSetting({ 'wy.musicUToken': '', 'wy.userInfo': '' })
   }
 
   return (
     <>
       <SubTitle title={t('setting_basic_wy_musicutoken')}>
         <View style={styles.row}>
-          <TouchableOpacity style={styles.valueBtn} onPress={handleShowEdit}>
-            <Text color={theme['c-primary-font']} numberOfLines={1} style={styles.value}>
-              {token ? t('setting_basic_wy_musicutoken_saved') : t('setting_basic_wy_musicutoken_not_set')}
+          <Text style={styles.value} numberOfLines={1}>
+            {token
+              ? (nickname ? t('setting_basic_wy_musicu_logged_in', { name: nickname }) : t('setting_basic_wy_musicu_logged_in_fallback'))
+              : t('setting_basic_wy_musicu_not_logged_in')}
+          </Text>
+          <TouchableOpacity onPress={showWyLoginModal}>
+            <Text color={theme['c-primary-font']}>
+              {token ? t('setting_basic_wy_musicu_relogin') : t('setting_basic_wy_musicu_scan_login')}
             </Text>
           </TouchableOpacity>
+        </View>
+        <View style={styles.linkRow}>
+          <TouchableOpacity style={styles.link} onPress={handleShowEdit}>
+            <Text size={12} style={styles.linkText}>{t('setting_basic_wy_musicu_manual_edit')}</Text>
+          </TouchableOpacity>
           {token
-            ? <TouchableOpacity onPress={handleClear}>
-                <Text style={{ opacity: 0.7 }}>{t('setting_basic_wy_musicutoken_clear')}</Text>
+            ? <TouchableOpacity style={styles.link} onPress={handleLogout}>
+                <Text size={12} style={styles.linkText}>{t('setting_basic_wy_musicu_logout')}</Text>
               </TouchableOpacity>
             : null}
         </View>
         <Text size={11} style={styles.hint}>{t('setting_basic_wy_musicutoken_tip')}</Text>
       </SubTitle>
-      <Dialog ref={dialogRef} title={t('setting_basic_wy_musicutoken')}>
+      <Dialog ref={dialogRef} title={t('setting_basic_wy_musicu_dialog_title')}>
         <View style={styles.dialogContent}>
           <View style={styles.inputWrap}>
             <Input placeholder="MUSIC_U" value={text} onChangeText={setText} />
@@ -74,12 +96,21 @@ const styles = StyleSheet.create({
     paddingTop: 5,
     paddingBottom: 5,
   },
-  valueBtn: {
+  value: {
     flexGrow: 1,
     flexShrink: 1,
-  },
-  value: {
     marginRight: 10,
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: 5,
+  },
+  link: {
+    marginRight: 20,
+  },
+  linkText: {
+    opacity: 0.7,
   },
   hint: {
     opacity: 0.6,
