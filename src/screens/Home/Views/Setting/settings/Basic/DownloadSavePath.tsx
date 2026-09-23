@@ -9,6 +9,8 @@ import { useI18n } from '@/lang'
 import { useTheme } from '@/store/theme/hook'
 import { updateSetting } from '@/core/common'
 import { externalStorageDirectoryPath } from '@/utils/fs'
+import { showStoragePermissionDialog } from '@/utils/storagePermission'
+import { toast } from '@/utils/tools'
 
 
 export default memo(() => {
@@ -29,6 +31,13 @@ export default memo(() => {
     }
   }
 
+  // 手动触发存储授权（写入公共目录所需的读写权限）
+  const handleRequestPermission = () => {
+    void showStoragePermissionDialog().then(granted => {
+      if (granted) toast(t('setting_basic_download_permission_granted'))
+    })
+  }
+
   return (
     <SubTitle title={t('setting_basic_download_save_path')}>
       <View style={styles.content}>
@@ -36,6 +45,9 @@ export default memo(() => {
           <Text numberOfLines={1} color={theme['c-primary-font']}>
             {savePath || `${externalStorageDirectoryPath}/Music`}
           </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.permissionLink} onPress={handleRequestPermission}>
+          <Text size={12} style={styles.permissionText}>{t('setting_basic_download_permission_check')}</Text>
         </TouchableOpacity>
         { visible ? <ChoosePath ref={choosePathRef} onConfirm={path => { updateSetting({ 'download.savePath': path }) }} /> : null }
       </View>
@@ -47,5 +59,11 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: 5,
     paddingBottom: 5,
+  },
+  permissionLink: {
+    marginTop: 8,
+  },
+  permissionText: {
+    opacity: 0.7,
   },
 })

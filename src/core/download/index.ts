@@ -5,7 +5,8 @@ import { storageDataPrefix } from '@/config/constant'
 import settingState from '@/store/setting/state'
 import * as downloadAction from '@/store/download/action'
 import { state as downloadState } from '@/store/download/state'
-import { toast, requestStoragePermission } from '@/utils/tools'
+import { toast } from '@/utils/tools'
+import { showStoragePermissionDialog, testDirWritable, collectStorageDiagnostics } from '@/utils/storagePermission'
 import { sizeFormate } from '@/utils/common'
 import { showDownloadModal, showDownloadManagerModal } from '@/navigation/utils'
 import { log } from '@/utils/log'
@@ -53,24 +54,48 @@ const resolveErrorCode = (err: any, phase: string): { code: string, phase: strin
   }
 }
 
-// 确保下载目录存在；失败时尝试申请存储权限后重试一次
-const ensureSaveDir = async(dir: string): Promise<boolean> => {
-  if (await existsFile(dir)) return true
+// 尝试创建目录并验证真实可写性
+// 注意：不能依赖 existsFile 预判（无权限时可能返回 false），直接 mkdir 并容忍 EEXIST
+const tryPrepareSaveDir = async(dir: string): Promise<boolean> => {
   try {
     await mkdir(dir)
   } catch (err) {
-    log.warn(`[下载] 创建目录失败：${dir}（${(err as Error).message}）`)
+    const msg = String((err as Error).message ?? err)
+    // 已存在（EEXIST）视为成功，其余情况记录日志后继续走存在性检查
+    if (!/exist/i.test(msg)) log.warn(`[下载] 创建目录失败：${dir}（${msg}）`)
   }
-  if (await existsFile(dir)) return true
-  const granted = await requestStoragePermission()
-  log.warn(`[下载] 目录不可用：${dir}，申请存储权限结果：${String(granted)}`)
-  if (!granted) return false
+  if (!await existsFile(dir)) return false
+  // 写入探针验证真实可写性（部分机型上目录存在但写入被拦截）
+  return testDirWritable(dir)
+}
+
+// 防止多任务场景下授权窗口叠加弹出（用对象包装，避免跨 await 赋值触发 eslint 警告）
+const permissionLock = { requesting: false }
+
+// 确保下载目录可用：不可用时弹授权引导窗口，用户完成授权后重试
+const ensureSaveDir = async(dir: string, onWaitPermission?: () => void): Promise<boolean> => {
+  if (await tryPrepareSaveDir(dir)) return true
+  log.warn(`[下载] 目录不可用，引导用户授权存储权限：${dir}`)
+
+  if (permissionLock.requesting) {
+    // 授权窗口已弹出中，本次不重复弹出
+    log.warn('[下载] 授权窗口已弹出，等待用户处理')
+    return false
+  }
+  permissionLock.requesting = true
+  if (onWaitPermission) onWaitPermission()
+  let granted = false
   try {
-    await mkdir(dir)
-  } catch (err) {
-    log.warn(`[下载] 申请权限后创建目录仍失败：${dir}（${(err as Error).message}）`)
+    granted = await showStoragePermissionDialog()
+  } finally {
+    permissionLock.requesting = false
   }
-  return existsFile(dir)
+  if (!granted) {
+    log.warn('[下载] 用户未完成存储授权，任务失败')
+    return false
+  }
+
+  return tryPrepareSaveDir(dir)
 }
 
 const qualityExt = (q: LX.Quality): LX.Download.FileExt => {
@@ -144,7 +169,13 @@ const runNext = async() => {
     task.metadata.filePath = `${getSaveDir()}/${task.metadata.fileName}`
 
     phase = 'prepare-dir'
-    if (!await ensureSaveDir(getSaveDir())) {
+    if (!await ensureSaveDir(getSaveDir(), () => {
+      const t2 = downloadState.taskList.find(t => t.id == task.id)
+      if (t2) {
+        t2.statusText = global.i18n.t('download_status_wait_permission')
+        downloadAction.updateTask(t2)
+      }
+    })) {
       throw createDownloadError('DL_FS_001', phase, `下载目录不可用，请检查存储权限或下载路径设置（${getSaveDir()}）`)
     }
 
@@ -228,6 +259,12 @@ const runNext = async() => {
     t.statusText = err.message ?? 'unknown error'
     downloadAction.updateTask(t)
     log.error(`[下载] 任务 ${task.id} 失败 [${resolved.code}]（阶段: ${resolved.phase}）：${t.statusText}`)
+    // 文件系统类失败时收集存储诊断信息，便于排查国产 ROM 二级权限墙等问题
+    if (resolved.code.startsWith('DL_FS_') || resolved.code === 'DL_NET_001') {
+      void collectStorageDiagnostics().then(info => {
+        log.error(`[下载] 存储诊断信息:\n${info}`)
+      })
+    }
     toast(global.i18n.t('download_fail_tip', { code: resolved.code }))
   } finally {
     currentJobId = null
