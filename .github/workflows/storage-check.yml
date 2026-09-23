@@ -1,85 +1,68 @@
 name: Storage Check
 
-# 存储权限模型验证：验证 target 29 + legacy 在 API 30/33 上是否可用
-# 判定信号：
-#   1. pm grant WRITE_EXTERNAL_STORAGE 是否成功（失败="not a changeable permission" → 权限模型已收窄）
-#   2. LEGACY_STORAGE appop 状态（allow → 系统按 legacy 模式对待应用）
-#   3. app 启动后进程存活（基础环境检查）
+# 自动构建 debug APK 后在 API 30/33 模拟器上验证存储权限模型
+# 判读信号：pm grant WRITE 是否成功 + 应用进程是否启动
 on:
   workflow_dispatch:
 
 jobs:
   check:
-    name: Storage check (API ${{ matrix.api-level }})
+    name: Storage (API ${{ matrix.api }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        api-level: [30, 33]
+        api: [30, 33]
     steps:
-      - name: Check out git repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Enable KVM group perms
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
+      - name: Setup Env
+        uses: ./.github/actions/setup
 
-      - name: Download v1.9.5 APK (x86_64)
-        run: |
-          curl -sL --retry 3 -o /tmp/app.apk "https://github.com/azx8788a/lx-music-mobile/releases/download/v1.9.5/lx-music-mobile-v1.9.5-x86_64.apk"
-          ls -la /tmp/app.apk
+      - name: Build debug APK
+        shell: bash
+        run: cd android && ./gradlew assembleDebug
 
-      - name: Storage checks on emulator
+      - name: Storage check
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: ${{ matrix.api-level }}
+          api-level: ${{ matrix.api }}
           target: google_apis
           arch: x86_64
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -no-metrics
           script: |
             set +e
             PKG=cn.toside.music.mobile
-            echo "########## Storage Check: API ${{ matrix.api-level }} ##########"
+            # 找 debug APK
+            APK=$(find android/app/build/outputs/apk -name "*x86_64*debug*.apk" -o -name "*universal*debug*.apk" | head -1)
+            echo "APK: $APK"
 
-            echo "=== [0] Install APK ==="
-            adb install -r /tmp/app.apk || adb install -r /tmp/app.apk
+            echo "=== [0] Install ==="
+            adb install -r "$APK" 2>&1
 
-            echo "=== [1] Real targetSdk from device ==="
-            adb shell dumpsys package $PKG | grep -E "targetSdk|minSdk|versionName" | head -8
+            echo "=== [1] targetSdk ==="
+            adb shell dumpsys package $PKG | grep -E "targetSdk|versionName" | head
 
-            echo "=== [2] LEGACY_STORAGE appop (before grant) ==="
-            adb shell cmd appops get $PKG LEGACY_STORAGE
+            echo "=== [2] WRITE before ==="
+            adb shell dumpsys package $PKG | grep WRITE_EXTERNAL | head
 
-            echo "=== [3] WRITE permission state (before) ==="
-            adb shell dumpsys package $PKG | grep -i "WRITE_EXTERNAL_STORAGE" | head -5
+            echo "=== [3] pm grant WRITE ==="
+            adb shell pm grant $PKG android.permission.WRITE_EXTERNAL_STORAGE 2>&1
+            echo "exit: $?"
 
-            echo "=== [4] pm grant WRITE_EXTERNAL_STORAGE ==="
-            adb shell pm grant $PKG android.permission.WRITE_EXTERNAL_STORAGE
-            echo "pm grant exit code: $?"
+            echo "=== [4] WRITE after ==="
+            adb shell dumpsys package $PKG | grep WRITE_EXTERNAL | head
 
-            echo "=== [5] WRITE permission state (after) ==="
-            adb shell dumpsys package $PKG | grep -i "WRITE_EXTERNAL_STORAGE" | head -5
-
-            echo "=== [6] LEGACY_STORAGE appop (after grant) ==="
-            adb shell cmd appops get $PKG LEGACY_STORAGE
-
-            echo "=== [7] All appops for package ==="
-            adb shell cmd appops get $PKG | head -30
-
-            echo "=== [8] Launch app and check process ==="
+            echo "=== [5] Launch app ==="
             adb shell am start -n $PKG/.MainActivity
-            sleep 15
-            adb shell "ps -A | grep cn.toside" && echo "APP_PROCESS_ALIVE" || echo "APP_PROCESS_NOT_FOUND"
+            sleep 10
+            adb shell "ps -A | grep cn.toside" && echo "PROCESS_OK" || echo "PROCESS_NOT_FOUND"
 
-            echo "=== [9] Environment cross-check (shell level, reference only) ==="
-            adb shell ls -ld /sdcard/ 2>&1
-            adb shell mkdir -p /sdcard/Music 2>&1 && echo "shell mkdir ok"
-            adb shell touch /sdcard/Music/.shell_probe 2>&1 && echo "shell write ok"
+            # 无权限 shell 验证：确认目录本身可由 shell 写
+            echo "=== [6] shell write probe ==="
+            adb shell mkdir -p /sdcard/Music 2>&1
+            adb shell touch /sdcard/Music/.ci_probe 2>&1
             adb shell ls -la /sdcard/Music/ 2>&1
-            adb shell rm -f /sdcard/Music/.shell_probe
+            adb shell rm -f /sdcard/Music/.ci_probe
 
-            echo "=== [10] SUMMARY for API ${{ matrix.api-level }} ==="
-            echo "Please read sections [2][4][5][6] above to judge legacy channel validity."
-            echo "########## DONE: API ${{ matrix.api-level }} ##########"
+            echo "=== [7] API ${{ matrix.api }} DONE ==="
