@@ -20,6 +20,12 @@ jobs:
       - name: Check out git repository
         uses: actions/checkout@v4
 
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
       - name: Download v1.9.5 APK (x86_64)
         run: |
           curl -sL --retry 3 -o /tmp/app.apk "https://github.com/azx8788a/lx-music-mobile/releases/download/v1.9.5/lx-music-mobile-v1.9.5-x86_64.apk"
@@ -31,6 +37,7 @@ jobs:
           api-level: ${{ matrix.api-level }}
           target: google_apis
           arch: x86_64
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: |
             set +e
             PKG=cn.toside.music.mobile
