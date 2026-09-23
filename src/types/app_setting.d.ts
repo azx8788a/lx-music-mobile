@@ -377,6 +377,11 @@ declare global {
       'wy.userInfo': string
 
       /**
+       * 网易云歌单快照自动更新间隔（'12' / '24' / '48' 小时，'off' 关闭）
+       */
+      'wy.snapshotUpdateInterval': string
+
+      /**
        * 是否启用同步
        */
       'sync.enable': boolean

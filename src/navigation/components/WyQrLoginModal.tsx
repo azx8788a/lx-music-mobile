@@ -12,6 +12,7 @@ import { useI18n } from '@/lang'
 import { updateSetting } from '@/core/common'
 import { getQrKey, getQrUrl, checkQrStatus } from '@/utils/musicSdk/wy/login'
 import { getLoginStatus } from '@/utils/musicSdk/wy/userPlaylist'
+import { saveSnapshot } from '@/core/wySnapshot'
 import { log } from '@/utils/log'
 import qrcode from '@/utils/qrcode'
 
@@ -113,6 +114,14 @@ const WyQrLoginModal = ({ componentId }: { componentId: string }) => {
     log.info(`[WY 扫码登录] 登录成功，uid: ${userInfo.uid || '-'}，nickname: ${userInfo.nickname || '-'}`)
     toast(t('wy_login_success'))
     void Navigation.dismissOverlay(componentId)
+    // 登录成功后自动保存全部歌单快照
+    toast(t('wy_snapshot_saving'))
+    void saveSnapshot(musicU).then(({ playlists, failed }) => {
+      toast(t('wy_snapshot_saved', { num: playlists.length - failed }))
+    }).catch((err: Error) => {
+      log.warn(`[WY 扫码登录] 歌单快照保存失败: ${err.message}`)
+      toast(t('wy_snapshot_save_failed'))
+    })
   }
 
   const handleQrStatus = async(unikey: string) => {

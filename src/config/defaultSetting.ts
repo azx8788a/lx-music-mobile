@@ -75,6 +75,7 @@ const defaultSetting: LX.AppSetting = {
 
   'wy.musicUToken': '',
   'wy.userInfo': '',
+  'wy.snapshotUpdateInterval': '24',
 
   'sync.enable': false,
 

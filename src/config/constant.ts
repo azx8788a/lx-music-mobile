@@ -80,6 +80,8 @@ export const storageDataPrefix = {
   userApi: '@user_api__',
   userApiBuiltinImported: '@user_api_builtin_imported',
   downloadTaskList: '@download_task_list',
+  wySnapshotMeta: '@wy_snapshot_meta',
+  wySnapshotSongs: '@wy_snapshot_songs__',
 } as const
 
 // v0.x.x 版本的 data keys

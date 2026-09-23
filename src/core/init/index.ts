@@ -69,6 +69,8 @@ export default async() => {
   bootLog('Data inited.')
   await initDownload()
   bootLog('Download inited.')
+  // 网易云歌单快照：启动时检查是否到自动更新间隔（异步执行，不阻塞启动）
+  void import('@/core/wySnapshot').then(async({ checkAndAutoUpdate }) => checkAndAutoUpdate()).catch(() => {})
   await initCommonState(setting)
   bootLog('Common State inited.')
 

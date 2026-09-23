@@ -13,6 +13,7 @@ import { useI18n } from '@/lang'
 import { updateSetting } from '@/core/common'
 import { getLoginStatus } from '@/utils/musicSdk/wy/userPlaylist'
 import { getWebViewCookie, flushWebViewCookie } from '@/utils/nativeModules/cookie'
+import { saveSnapshot } from '@/core/wySnapshot'
 import { log } from '@/utils/log'
 
 // 网易云音乐移动版登录页
@@ -61,6 +62,14 @@ const WyLoginModal = ({ componentId }: { componentId: string }) => {
     log.info(`[WY 网页登录] 登录成功，uid: ${userInfo.uid || '-'}，nickname: ${userInfo.nickname || '-'}`)
     toast(t('wy_login_success'))
     void Navigation.dismissOverlay(componentId)
+    // 登录成功后自动保存全部歌单快照
+    toast(t('wy_snapshot_saving'))
+    void saveSnapshot(musicU).then(({ playlists, failed }) => {
+      toast(t('wy_snapshot_saved', { num: playlists.length - failed }))
+    }).catch((err: Error) => {
+      log.warn(`[WY 网页登录] 歌单快照保存失败: ${err.message}`)
+      toast(t('wy_snapshot_save_failed'))
+    })
   }
 
   // 先验证 Cookie 有效性再保存，避免保存残留的失效登录状态
