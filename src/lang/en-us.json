@@ -625,5 +625,7 @@
   "wy_radio_entry": "Radio",
   "wy_radio_fm": "Personal FM",
   "wy_radio_failed": "Failed to load radio songs, please retry",
-  "wy_radio_refresh_tip": "Pull down to fetch a new batch"
+  "wy_radio_refresh_tip": "Pull down to fetch a new batch",
+  "wy_heartbeat_entry": "Heartbeat",
+  "wy_radio_heartbeat": "Heartbeat Mode"
 }

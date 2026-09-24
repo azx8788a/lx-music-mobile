@@ -1,7 +1,7 @@
 // 网易云推荐与私人漫游：歌曲 id → 现有 musicDetail 批量详情 → 播放器可用结构
 import musicDetailApi from '@/utils/musicSdk/wy/musicDetail'
 import { getDailyRecommendSongIds } from '@/utils/musicSdk/wy/recommend'
-import { getPersonalFmSongIds } from '@/utils/musicSdk/wy/personalFm'
+import { getPersonalFmSongIds, getHeartbeatSongIds } from '@/utils/musicSdk/wy/personalFm'
 import { toNewMusicInfo } from '@/utils'
 import settingState from '@/store/setting/state'
 import { log } from '@/utils/log'
@@ -47,5 +47,16 @@ export const getPersonalFmList = async(): Promise<LX.Music.MusicInfoOnline[]> =>
   log.info('[WY 私人漫游] 获取歌曲')
   const musics = await idsToMusicInfos(await getPersonalFmSongIds(token))
   log.info(`[WY 私人漫游] 获取成功，共 ${musics.length} 首`)
+  return musics
+}
+
+/**
+ * 心动模式：获取一批相似歌曲（/weapi/v1/radio/get）
+ */
+export const getHeartbeatList = async(): Promise<LX.Music.MusicInfoOnline[]> => {
+  const token = ensureToken()
+  log.info('[WY 心动模式] 获取歌曲')
+  const musics = await idsToMusicInfos(await getHeartbeatSongIds(token))
+  log.info(`[WY 心动模式] 获取成功，共 ${musics.length} 首`)
   return musics
 }

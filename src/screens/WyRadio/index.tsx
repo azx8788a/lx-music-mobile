@@ -11,7 +11,7 @@ import PlayerBar from '@/components/player/PlayerBar'
 import { setTempList } from '@/core/list'
 import { playList } from '@/core/player/player'
 import { LIST_IDS } from '@/config/constant'
-import { getPersonalFmList } from '@/core/wyRecommend'
+import { getHeartbeatList, getPersonalFmList } from '@/core/wyRecommend'
 import { showWyLoginModal } from '@/navigation/utils'
 import { useSettingValue } from '@/store/setting/hook'
 import { createStyle } from '@/utils/tools'
@@ -22,7 +22,7 @@ import { log } from '@/utils/log'
 
 type PageStatus = 'loading' | 'noToken' | 'invalid' | 'list' | 'error'
 
-export default ({ componentId }: { componentId: string }) => {
+export default ({ componentId, mode = 'fm' }: { componentId: string, mode?: 'fm' | 'heartbeat' }) => {
   const theme = useTheme()
   const t = useI18n()
   const token = useSettingValue('wy.musicUToken')
@@ -36,7 +36,9 @@ export default ({ componentId }: { componentId: string }) => {
       return
     }
     try {
-      const list = await getPersonalFmList()
+      const list = mode == 'heartbeat'
+        ? await getHeartbeatList()
+        : await getPersonalFmList()
       if (!list.length) {
         // 空批次不视为失败：保持当前列表，仅记录日志
         log.info('[WY 漫游] 本次未获取到新歌曲')
@@ -47,7 +49,7 @@ export default ({ componentId }: { componentId: string }) => {
       await setTempList(fmId, list)
       onlineListRef.current?.setList(list)
       setStatus('list')
-      log.info(`[WY 漫游] 获取 ${list.length} 首`)
+      log.info(`[WY 漫游] 获取 ${list.length} 首（模式: ${mode}）`)
     } catch (err: any) {
       // token 失效：明确提示；其他错误仅在空列表时展示
       if (err?.code == 'INVALID_TOKEN') {
@@ -58,7 +60,7 @@ export default ({ componentId }: { componentId: string }) => {
       log.warn(`[WY 漫游] 获取失败: ${(err as Error).message}`)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token])
+  }, [token, mode])
 
   useEffect(() => {
     void loadBatch()
@@ -80,7 +82,7 @@ export default ({ componentId }: { componentId: string }) => {
       <StatusBar />
       <View style={{ ...styles.header, borderBottomColor: theme['c-border-background'] }}>
         <Text size={16} numberOfLines={1} style={styles.title}>
-          {t('wy_radio_fm')}
+          {t(mode == 'heartbeat' ? 'wy_radio_heartbeat' : 'wy_radio_fm')}
         </Text>
         <Text size={11} style={styles.sub}>{t('wy_radio_refresh_tip')}</Text>
       </View>

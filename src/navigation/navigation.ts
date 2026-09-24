@@ -233,8 +233,10 @@ export function pushWyRecommendScreen(componentId: string) {
   pushWySimpleScreen(componentId, WY_SONGLIST_RECOMMEND_SCREEN, {})
 }
 
-export function pushWyRadioScreen(componentId: string) {
-  pushWySimpleScreen(componentId, WY_PLAY_RADIO_SCREEN, {})
+export type WyRadioMode = 'fm' | 'heartbeat'
+
+export function pushWyRadioScreen(componentId: string, mode: WyRadioMode = 'fm') {
+  pushWySimpleScreen(componentId, WY_PLAY_RADIO_SCREEN, { mode })
 }
 
 export function pushSonglistDetailScreen(componentId: string, info: ListInfoItem) {

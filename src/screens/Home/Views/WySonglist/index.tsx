@@ -181,6 +181,11 @@ export default () => {
     navigations.pushWyRadioScreen(commonState.componentIds.home)
   }
 
+  const handleOpenHeartbeat = () => {
+    if (!commonState.componentIds.home) return
+    navigations.pushWyRadioScreen(commonState.componentIds.home, 'heartbeat')
+  }
+
   return (
     <View style={{ ...styles.container, backgroundColor: theme['c-content-background'] }}>
       <View style={styles.toolbar}>
@@ -194,6 +199,9 @@ export default () => {
           </TouchableOpacity>
           <TouchableOpacity style={styles.toolBtn} onPress={handleOpenRadio}>
             <Text size={12} color={theme['c-primary-font']}>{t('wy_radio_entry')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolBtn} onPress={handleOpenHeartbeat}>
+            <Text size={12} color={theme['c-primary-font']}>{t('wy_heartbeat_entry')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.toolBtn} onPress={handleUpdate} disabled={updating}>
             <Text size={12} color={theme['c-primary-font']}>{t('wy_snapshot_update')}</Text>

@@ -625,5 +625,7 @@
   "wy_radio_entry": "漫游",
   "wy_radio_fm": "私人漫游",
   "wy_radio_failed": "获取漫游歌曲失败，请稍后重试",
-  "wy_radio_refresh_tip": "下拉刷新获取新一批歌曲"
+  "wy_radio_refresh_tip": "下拉刷新获取新一批歌曲",
+  "wy_heartbeat_entry": "心动模式",
+  "wy_radio_heartbeat": "心动模式"
 }
