@@ -183,7 +183,7 @@ const WyQrLoginModal = ({ componentId }: { componentId: string }) => {
       .then(async() => {
         const unikey = await getQrKey()
         if (canceledRef.current) return
-        log.info(`[WY 扫码登录] 二维码已生成，unikey: ${unikey}`)
+        log.info(`[WY 扫码登录] 二维码已生成（unikey 长度: ${unikey.length}）`)
         unikeyRef.current = unikey
         setQrUrl(getQrUrl(unikey))
         setStatus('waiting')
