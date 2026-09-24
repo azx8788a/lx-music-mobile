@@ -7,6 +7,7 @@ import {
   SONGLIST_DETAIL_SCREEN,
   COMMENT_SCREEN,
   WY_SONGLIST_RECOMMEND_SCREEN,
+  WY_PLAY_RADIO_SCREEN,
   // SETTING_SCREEN,
 } from './screenNames'
 
@@ -230,6 +231,10 @@ const pushWySimpleScreen = (componentId: string, name: string, passProps: Record
 
 export function pushWyRecommendScreen(componentId: string) {
   pushWySimpleScreen(componentId, WY_SONGLIST_RECOMMEND_SCREEN, {})
+}
+
+export function pushWyRadioScreen(componentId: string) {
+  pushWySimpleScreen(componentId, WY_PLAY_RADIO_SCREEN, {})
 }
 
 export function pushSonglistDetailScreen(componentId: string, info: ListInfoItem) {

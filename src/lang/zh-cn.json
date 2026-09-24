@@ -621,5 +621,9 @@
   "wy_recommend_empty": "今天还没有推荐内容",
   "wy_recommend_failed": "获取每日推荐失败，请稍后重试",
   "wy_recommend_loaded": "已获取 {num} 首推荐歌曲",
-  "wy_recommend_token_invalid": "登录状态已失效，请重新登录网易云"
+  "wy_recommend_token_invalid": "登录状态已失效，请重新登录网易云",
+  "wy_radio_entry": "漫游",
+  "wy_radio_fm": "私人漫游",
+  "wy_radio_failed": "获取漫游歌曲失败，请稍后重试",
+  "wy_radio_refresh_tip": "下拉刷新获取新一批歌曲"
 }

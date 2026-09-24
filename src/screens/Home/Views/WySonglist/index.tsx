@@ -176,6 +176,11 @@ export default () => {
     navigations.pushWyRecommendScreen(commonState.componentIds.home)
   }
 
+  const handleOpenRadio = () => {
+    if (!commonState.componentIds.home) return
+    navigations.pushWyRadioScreen(commonState.componentIds.home)
+  }
+
   return (
     <View style={{ ...styles.container, backgroundColor: theme['c-content-background'] }}>
       <View style={styles.toolbar}>
@@ -186,7 +191,11 @@ export default () => {
         <View style={styles.toolbarBtns}>
           <TouchableOpacity style={styles.toolBtn} onPress={handleOpenRecommend}>
             <Text size={12} color={theme['c-primary-font']}>{t('wy_recommend_entry')}</Text>
-          </TouchableOpacity>          <TouchableOpacity style={styles.toolBtn} onPress={handleUpdate} disabled={updating}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolBtn} onPress={handleOpenRadio}>
+            <Text size={12} color={theme['c-primary-font']}>{t('wy_radio_entry')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolBtn} onPress={handleUpdate} disabled={updating}>
             <Text size={12} color={theme['c-primary-font']}>{t('wy_snapshot_update')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.toolBtn} onPress={handleExport}>

@@ -621,5 +621,9 @@
   "wy_recommend_empty": "今天還沒有推薦內容",
   "wy_recommend_failed": "獲取每日推薦失敗，請稍後重試",
   "wy_recommend_loaded": "已獲取 {num} 首推薦歌曲",
-  "wy_recommend_token_invalid": "登入狀態已失效，請重新登入網易雲"
+  "wy_recommend_token_invalid": "登入狀態已失效，請重新登入網易雲",
+  "wy_radio_entry": "漫遊",
+  "wy_radio_fm": "私人漫遊",
+  "wy_radio_failed": "獲取漫遊歌曲失敗，請稍後重試",
+  "wy_radio_refresh_tip": "下拉重新整理獲取新一批歌曲"
 }

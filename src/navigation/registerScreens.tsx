@@ -8,6 +8,7 @@ import {
   SonglistDetail,
   Comment,
   WyRecommend,
+  WyRadio,
   // Setting,
 } from '@/screens'
 import { Provider } from '@/store/Provider'
@@ -18,6 +19,7 @@ import {
   SONGLIST_DETAIL_SCREEN,
   COMMENT_SCREEN,
   WY_SONGLIST_RECOMMEND_SCREEN,
+  WY_PLAY_RADIO_SCREEN,
   VERSION_MODAL,
   PACT_MODAL,
   SYNC_MODE_MODAL,
@@ -59,6 +61,7 @@ export default () => {
   Navigation.registerComponent(SONGLIST_DETAIL_SCREEN, () => WrappedComponent(SonglistDetail))
   Navigation.registerComponent(COMMENT_SCREEN, () => WrappedComponent(Comment))
   Navigation.registerComponent(WY_SONGLIST_RECOMMEND_SCREEN, () => WrappedComponent(WyRecommend))
+  Navigation.registerComponent(WY_PLAY_RADIO_SCREEN, () => WrappedComponent(WyRadio))
   Navigation.registerComponent(VERSION_MODAL, () => WrappedComponent(VersionModal))
   Navigation.registerComponent(PACT_MODAL, () => WrappedComponent(PactModal))
   Navigation.registerComponent(SYNC_MODE_MODAL, () => WrappedComponent(SyncModeModal))

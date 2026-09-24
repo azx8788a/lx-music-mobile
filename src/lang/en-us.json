@@ -621,5 +621,9 @@
   "wy_recommend_empty": "No recommendations for today",
   "wy_recommend_failed": "Failed to load recommendations, please retry",
   "wy_recommend_loaded": "Loaded {num} recommended songs",
-  "wy_recommend_token_invalid": "Login expired, please sign in again"
+  "wy_recommend_token_invalid": "Login expired, please sign in again",
+  "wy_radio_entry": "Radio",
+  "wy_radio_fm": "Personal FM",
+  "wy_radio_failed": "Failed to load radio songs, please retry",
+  "wy_radio_refresh_tip": "Pull down to fetch a new batch"
 }
