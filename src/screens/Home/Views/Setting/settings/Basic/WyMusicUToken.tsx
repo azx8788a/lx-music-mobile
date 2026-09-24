@@ -12,6 +12,7 @@ import { useI18n } from '@/lang'
 import { updateSetting } from '@/core/common'
 import { showWyLoginModal, showWyQrLoginModal } from '@/navigation/utils'
 import { clearWyToken, saveWyToken } from '@/utils/wySecureToken'
+import { clearNetEaseCookies } from '@/utils/nativeModules/cookie'
 import { log } from '@/utils/log'
 
 const getUserNickname = (userInfo: string) => {
@@ -46,6 +47,10 @@ export default memo(() => {
   const handleLogout = () => {
     updateSetting({ 'wy.userInfo': '' })
     void clearWyToken()
+    // 同步清理 WebView 中残留的网易云登录 Cookie，避免下次打开登录页仍是已登录状态
+    clearNetEaseCookies().catch(err => {
+      log.warn(`[WY] 清理网易云 Cookie 失败: ${(err as Error).message}`)
+    })
     log.info('[WY] 已退出网易云登录')
   }
 

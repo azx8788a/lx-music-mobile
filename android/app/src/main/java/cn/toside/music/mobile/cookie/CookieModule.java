@@ -44,4 +44,30 @@ public class CookieModule extends ReactContextBaseJavaModule {
     promise.resolve(null);
   }
 
+  /**
+   * 删除指定 url 下的 Cookie（按名称逐个置为过期）。
+   * 同时以 Domain=163.com 重写一份过期 Cookie，覆盖网易云设置在根域
+   * （.163.com）上的持久 Cookie；不触碰其他域名的 Cookie。
+   */
+  @ReactMethod
+  public void removeCookies(String url, Promise promise) {
+    try {
+      CookieManager cm = CookieManager.getInstance();
+      String cookies = cm.getCookie(url);
+      if (cookies != null && !cookies.isEmpty()) {
+        for (String cookie : cookies.split(";")) {
+          String[] parts = cookie.split("=", 2);
+          String name = parts[0].trim();
+          if (name.isEmpty()) continue;
+          cm.setCookie(url, name + "=; Path=/; Max-Age=0");
+          cm.setCookie(url, name + "=; Domain=163.com; Path=/; Max-Age=0");
+        }
+      }
+      cm.flush();
+      promise.resolve(true);
+    } catch (Exception e) {
+      promise.reject("COOKIE_REMOVE_FAILED", e.toString(), e);
+    }
+  }
+
 }
