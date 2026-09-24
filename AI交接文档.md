@@ -11,7 +11,7 @@
 | 项 | 值 |
 |---|---|
 | 仓库 | `https://github.com/azx8788a/lx-music-mobile` |
-| 账号 | `azx8788a`，GitHub Token: `<TOKEN_PLACEHOLDER>` |
+| 账号 | `azx8788a`，GitHub Token: `<在这里填 GitHub Token>` |
 | 工作区 | `/workspace/lx-music-mobile`（node_modules 已装好） |
 | 上游 | `lyswhut/lx-music-mobile` v1.9.1（commit `fb84807`），我们是 fork |
 | 框架 | React Native 0.73 + TypeScript + React Native Navigation |
@@ -127,7 +127,7 @@ python3 -c "import json; json.load(open('src/lang/zh-cn.json')); print('OK')"
 
 # 提交
 git add -A && git commit -m "feat/fix/docs: <描述>" && \
-git push "https://<TOKEN_PLACEHOLDER>@github.com/azx8788a/lx-music-mobile.git" master
+git push "https://<在这里填 GitHub Token>@github.com/azx8788a/lx-music-mobile.git" master
 ```
 
 ---
@@ -138,11 +138,11 @@ git push "https://<TOKEN_PLACEHOLDER>@github.com/azx8788a/lx-music-mobile.git" m
 - 产物 10-20 分钟后出现在 Release 页 `v<package.json版本号>`（5 个 APK：arm64-v8a / armeabi-v7a / x86_64 / x86 / universal）
 - 手动触发（仅在有构建异常时用）：
 ```bash
-curl -X POST -H "Authorization: token <TOKEN_PLACEHOLDER>" \
+curl -X POST -H "Authorization: token <在这里填 GitHub Token>" \
   https://api.github.com/repos/azx8788a/lx-music-mobile/actions/workflows/release.yml/dispatches \
   -d '{"ref":"master"}'
 ```
-- 查询最新构建：`curl -s -H "Authorization: token ghp_Gn..." "https://api.github.com/repos/azx8788a/lx-music-mobile/actions/runs?per_page=3"`
+- 查询最新构建：`curl -s -H "Authorization: token ghp_..." "https://api.github.com/repos/azx8788a/lx-music-mobile/actions/runs?per_page=3"`
 
 ---
 
