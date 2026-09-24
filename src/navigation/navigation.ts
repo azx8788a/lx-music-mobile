@@ -6,6 +6,7 @@ import {
   PLAY_DETAIL_SCREEN,
   SONGLIST_DETAIL_SCREEN,
   COMMENT_SCREEN,
+  WY_SONGLIST_RECOMMEND_SCREEN,
   // SETTING_SCREEN,
 } from './screenNames'
 
@@ -199,6 +200,38 @@ export function pushPlayDetailScreen(componentId: string, skipAnimation = false)
     })
   })
 }
+// 网易云推荐与漫游：同一套无动画推屏参数
+const pushWySimpleScreen = (componentId: string, name: string, passProps: Record<string, any>) => {
+  const theme = themeState.theme
+  requestAnimationFrame(() => {
+    void Navigation.push(componentId, {
+      component: {
+        name,
+        passProps,
+        options: {
+          topBar: { visible: false, height: 0, drawBehind: false },
+          statusBar: {
+            drawBehind: true,
+            visible: true,
+            style: getStatusBarStyle(theme.isDark),
+            backgroundColor: 'transparent',
+          },
+          navigationBar: {
+            backgroundColor: theme['c-content-background'],
+          },
+          layout: {
+            componentBackgroundColor: theme['c-content-background'],
+          },
+        },
+      },
+    })
+  })
+}
+
+export function pushWyRecommendScreen(componentId: string) {
+  pushWySimpleScreen(componentId, WY_SONGLIST_RECOMMEND_SCREEN, {})
+}
+
 export function pushSonglistDetailScreen(componentId: string, info: ListInfoItem) {
   const theme = themeState.theme
 

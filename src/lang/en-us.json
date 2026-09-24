@@ -615,5 +615,11 @@
   "download_success_metadata_warn": "Download completed, but some tags or lyrics failed to write. See the error log for details",
   "setting_basic_download_metadata": "Download extras",
   "setting_basic_download_metadata_tag": "Write song tags and cover art",
-  "setting_basic_download_metadata_lyric": "Save lyrics (embed and create a same-name .lrc file)"
+  "setting_basic_download_metadata_lyric": "Save lyrics (embed and create a same-name .lrc file)",
+  "wy_recommend_entry": "Daily Mix",
+  "wy_recommend_title": "Netease Daily Recommendations",
+  "wy_recommend_empty": "No recommendations for today",
+  "wy_recommend_failed": "Failed to load recommendations, please retry",
+  "wy_recommend_loaded": "Loaded {num} recommended songs",
+  "wy_recommend_token_invalid": "Login expired, please sign in again"
 }

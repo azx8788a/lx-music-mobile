@@ -615,5 +615,11 @@
   "download_success_metadata_warn": "下载完成，但部分标签或歌词写入失败，详情见错误日志",
   "setting_basic_download_metadata": "下载附加信息",
   "setting_basic_download_metadata_tag": "写入歌曲标签与封面",
-  "setting_basic_download_metadata_lyric": "保存歌词（内嵌并生成同名 .lrc 文件）"
+  "setting_basic_download_metadata_lyric": "保存歌词（内嵌并生成同名 .lrc 文件）",
+  "wy_recommend_entry": "每日推荐",
+  "wy_recommend_title": "网易云每日推荐",
+  "wy_recommend_empty": "今天还没有推荐内容",
+  "wy_recommend_failed": "获取每日推荐失败，请稍后重试",
+  "wy_recommend_loaded": "已获取 {num} 首推荐歌曲",
+  "wy_recommend_token_invalid": "登录状态已失效，请重新登录网易云"
 }

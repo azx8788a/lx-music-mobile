@@ -615,5 +615,11 @@
   "download_success_metadata_warn": "下載完成，但部分標籤或歌詞寫入失敗，詳情見錯誤日誌",
   "setting_basic_download_metadata": "下載附加資訊",
   "setting_basic_download_metadata_tag": "寫入歌曲標籤與封面",
-  "setting_basic_download_metadata_lyric": "儲存歌詞（內嵌並產生同名 .lrc 檔案）"
+  "setting_basic_download_metadata_lyric": "儲存歌詞（內嵌並產生同名 .lrc 檔案）",
+  "wy_recommend_entry": "每日推薦",
+  "wy_recommend_title": "網易雲每日推薦",
+  "wy_recommend_empty": "今天還沒有推薦內容",
+  "wy_recommend_failed": "獲取每日推薦失敗，請稍後重試",
+  "wy_recommend_loaded": "已獲取 {num} 首推薦歌曲",
+  "wy_recommend_token_invalid": "登入狀態已失效，請重新登入網易雲"
 }
