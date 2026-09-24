@@ -14,6 +14,7 @@ import { updateSetting } from '@/core/common'
 import { getLoginStatus } from '@/utils/musicSdk/wy/userPlaylist'
 import { getWebViewCookie, flushWebViewCookie } from '@/utils/nativeModules/cookie'
 import { saveSnapshot } from '@/core/wySnapshot'
+import { saveWyToken } from '@/utils/wySecureToken'
 import { log } from '@/utils/log'
 
 // 网易云音乐移动版登录页
@@ -54,11 +55,9 @@ const WyLoginModal = ({ componentId }: { componentId: string }) => {
   const handleSuccess = async(musicU: string, userInfo: { uid: string, nickname: string, avatarUrl: string }) => {
     // 将 WebView 中的 Cookie 落盘，下次打开 App 时浏览器内仍是登录状态
     void flushWebViewCookie()
-    // 保存登录状态，下次打开直接使用
-    updateSetting({
-      'wy.musicUToken': musicU,
-      'wy.userInfo': JSON.stringify(userInfo),
-    })
+    // 保存登录状态（Token 加密存储），下次打开直接使用
+    void saveWyToken(musicU)
+    updateSetting({ 'wy.userInfo': JSON.stringify(userInfo) })
     log.info(`[WY 网页登录] 登录成功，uid: ${userInfo.uid || '-'}，nickname: ${userInfo.nickname || '-'}`)
     toast(t('wy_login_success'))
     void Navigation.dismissOverlay(componentId)

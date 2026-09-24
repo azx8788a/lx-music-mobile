@@ -13,6 +13,7 @@ import { updateSetting } from '@/core/common'
 import { getQrKey, getQrUrl, checkQrStatus } from '@/utils/musicSdk/wy/login'
 import { getLoginStatus } from '@/utils/musicSdk/wy/userPlaylist'
 import { saveSnapshot } from '@/core/wySnapshot'
+import { saveWyToken } from '@/utils/wySecureToken'
 import { log } from '@/utils/log'
 import qrcode from '@/utils/qrcode'
 
@@ -106,11 +107,9 @@ const WyQrLoginModal = ({ componentId }: { componentId: string }) => {
     } catch (err) {
       log.warn(`[WY 扫码登录] 获取用户信息失败（仍保存 Token）: ${(err as Error).message}`)
     }
-    // 保存登录状态，下次打开直接使用
-    updateSetting({
-      'wy.musicUToken': musicU,
-      'wy.userInfo': JSON.stringify(userInfo),
-    })
+    // 保存登录状态（Token 加密存储），下次打开直接使用
+    void saveWyToken(musicU)
+    updateSetting({ 'wy.userInfo': JSON.stringify(userInfo) })
     log.info(`[WY 扫码登录] 登录成功，uid: ${userInfo.uid || '-'}，nickname: ${userInfo.nickname || '-'}`)
     toast(t('wy_login_success'))
     void Navigation.dismissOverlay(componentId)

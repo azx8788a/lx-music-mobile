@@ -5,6 +5,7 @@ import migrateSetting from './migrateSetting'
 import settingState from '@/store/setting/state'
 import { migrateMetaData, migrateListData } from './migrate'
 import { exitApp, tipDialog } from '@/utils/tools'
+import { initWyTokenStorage, sanitizeWyTokenForSave } from '@/utils/wySecureToken'
 
 // 业务相关工具方法
 
@@ -105,7 +106,9 @@ export const initSetting = async() => {
 
   // console.log(setting)
   const updatedSetting = updateSetting(setting, true)
-  void saveData(storageDataPrefix.setting, updatedSetting.setting)
+  // 先完成登录 Token 的加密读取/迁移，再落盘，确保迁移成功时明文被清除、失败时明文被保留
+  await initWyTokenStorage(updatedSetting.setting)
+  void saveData(storageDataPrefix.setting, sanitizeWyTokenForSave(updatedSetting.setting))
 
   return updatedSetting
 }

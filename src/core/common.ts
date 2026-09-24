@@ -16,10 +16,11 @@ import { getSelectedManagedFolder, saveFontSize, saveViewPrevState, setSelectedM
 import { showPactModal as handleShowPactModal } from '@/navigation'
 import { hideDesktopLyricView } from '@/utils/nativeModules/lyricDesktop'
 import { getPersistedUriList, selectManagedFolder } from '@/utils/fs'
+import { sanitizeWyTokenForSave } from '@/utils/wySecureToken'
 
 
 const throttleSaveSetting = throttle(() => {
-  void saveData(storageDataPrefix.setting, settingState.setting)
+  void saveData(storageDataPrefix.setting, sanitizeWyTokenForSave(settingState.setting))
 })
 
 /**

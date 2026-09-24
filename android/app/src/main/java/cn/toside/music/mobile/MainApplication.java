@@ -13,6 +13,7 @@ import cn.toside.music.mobile.cache.CachePackage;
 import cn.toside.music.mobile.cookie.CookiePackage;
 import cn.toside.music.mobile.crypto.CryptoPackage;
 import cn.toside.music.mobile.lyric.LyricPackage;
+import cn.toside.music.mobile.securestore.SecureStorePackage;
 import cn.toside.music.mobile.userApi.UserApiPackage;
 import cn.toside.music.mobile.utils.UtilsPackage;
 
@@ -37,6 +38,7 @@ public class MainApplication extends NavigationApplication {
           packages.add(new UtilsPackage());
           packages.add(new CryptoPackage());
           packages.add(new UserApiPackage());
+          packages.add(new SecureStorePackage());
           return packages;
         }
 

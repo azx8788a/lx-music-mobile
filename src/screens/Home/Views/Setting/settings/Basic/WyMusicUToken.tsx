@@ -11,6 +11,7 @@ import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
 import { updateSetting } from '@/core/common'
 import { showWyLoginModal, showWyQrLoginModal } from '@/navigation/utils'
+import { clearWyToken, saveWyToken } from '@/utils/wySecureToken'
 import { log } from '@/utils/log'
 
 const getUserNickname = (userInfo: string) => {
@@ -39,11 +40,12 @@ export default memo(() => {
   const handleConfirm = () => {
     dialogRef.current?.setVisible(false)
     const value = text.trim()
-    updateSetting({ 'wy.musicUToken': value })
+    void saveWyToken(value)
     log.info(`[WY] 手动保存登录 Token（长度: ${value.length}）`)
   }
   const handleLogout = () => {
-    updateSetting({ 'wy.musicUToken': '', 'wy.userInfo': '' })
+    updateSetting({ 'wy.userInfo': '' })
+    void clearWyToken()
     log.info('[WY] 已退出网易云登录')
   }
 

@@ -82,6 +82,7 @@ export const storageDataPrefix = {
   downloadTaskList: '@download_task_list',
   wySnapshotMeta: '@wy_snapshot_meta',
   wySnapshotSongs: '@wy_snapshot_songs__',
+  wyMusicUSecure: '@wy_music_u_secure',
 } as const
 
 // v0.x.x 版本的 data keys
