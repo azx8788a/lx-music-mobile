@@ -367,6 +367,16 @@ declare global {
       'download.quality': LX.Quality
 
       /**
+       * 下载完成后是否写入歌曲标签与封面
+       */
+      'download.isWriteMetadata': boolean
+
+      /**
+       * 下载完成后是否保存歌词（内嵌并生成同名 .lrc 文件）
+       */
+      'download.isSaveLyric': boolean
+
+      /**
        * 网易云登录 Token（MUSIC_U Cookie 值），用于导入网易云收藏歌单
        */
       'wy.musicUToken': string

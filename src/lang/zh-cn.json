@@ -610,5 +610,10 @@
   "setting_basic_wy_snapshot_interval_24": "24 小时",
   "setting_basic_wy_snapshot_interval_48": "48 小时",
   "setting_basic_wy_snapshot_interval_off": "关闭",
-  "setting_basic_wy_snapshot_interval_tip": "登录后进入「网易云歌单」页或启动应用时检查，超过间隔则自动更新本地歌单数据"
+  "setting_basic_wy_snapshot_interval_tip": "登录后进入「网易云歌单」页或启动应用时检查，超过间隔则自动更新本地歌单数据",
+  "download_status_write_metadata": "写入标签与歌词",
+  "download_success_metadata_warn": "下载完成，但部分标签或歌词写入失败，详情见错误日志",
+  "setting_basic_download_metadata": "下载附加信息",
+  "setting_basic_download_metadata_tag": "写入歌曲标签与封面",
+  "setting_basic_download_metadata_lyric": "保存歌词（内嵌并生成同名 .lrc 文件）"
 }

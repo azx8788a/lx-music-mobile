@@ -7,6 +7,7 @@ import SourceName from './SourceName'
 import DownloadSavePath from './DownloadSavePath'
 import DownloadQuality from './DownloadQuality'
 import DownloadFileName from './DownloadFileName'
+import DownloadMetadata from './DownloadMetadata'
 import WyMusicUToken from './WyMusicUToken'
 import WySnapshotInterval from './WySnapshotInterval'
 import Language from './Language'
@@ -47,6 +48,7 @@ export default memo(() => {
       <DownloadSavePath />
       <DownloadQuality />
       <DownloadFileName />
+      <DownloadMetadata />
       <WyMusicUToken />
       <WySnapshotInterval />
       <Source />

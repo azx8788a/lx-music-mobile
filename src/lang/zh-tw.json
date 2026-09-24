@@ -610,5 +610,10 @@
   "setting_basic_wy_snapshot_interval_24": "24 小時",
   "setting_basic_wy_snapshot_interval_48": "48 小時",
   "setting_basic_wy_snapshot_interval_off": "關閉",
-  "setting_basic_wy_snapshot_interval_tip": "登入後進入「網易雲歌單」頁或啟動應用時檢查，超過間隔則自動更新本機歌單資料"
+  "setting_basic_wy_snapshot_interval_tip": "登入後進入「網易雲歌單」頁或啟動應用時檢查，超過間隔則自動更新本機歌單資料",
+  "download_status_write_metadata": "寫入標籤與歌詞",
+  "download_success_metadata_warn": "下載完成，但部分標籤或歌詞寫入失敗，詳情見錯誤日誌",
+  "setting_basic_download_metadata": "下載附加資訊",
+  "setting_basic_download_metadata_tag": "寫入歌曲標籤與封面",
+  "setting_basic_download_metadata_lyric": "儲存歌詞（內嵌並產生同名 .lrc 檔案）"
 }

@@ -18,7 +18,13 @@ const TaskRow = ({ task }: { task: LX.Download.ListItem }) => {
   let statusText: string
   switch (task.status) {
     case 'waiting': statusText = t('download_status_waiting'); break
-    case 'run': statusText = `${t('download_status_downloading')} ${Math.floor(task.progress * 100)}%`; break
+    case 'run': {
+      const currentStatus = task.statusText || t('download_status_downloading')
+      statusText = currentStatus == t('download_status_downloading')
+        ? `${currentStatus} ${Math.floor(task.progress * 100)}%`
+        : currentStatus
+      break
+    }
     case 'pause': statusText = t('download_status_pause'); break
     case 'completed': statusText = t('download_status_completed'); break
     case 'error': statusText = `${t('download_status_error')}${task.errorCode ? ` [${task.errorCode}]` : ''}${task.statusText ? `: ${task.statusText}` : ''}`; break

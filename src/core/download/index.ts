@@ -10,6 +10,7 @@ import { showStoragePermissionDialog, testDirWritable, collectStorageDiagnostics
 import { sizeFormate } from '@/utils/common'
 import { showDownloadModal, showDownloadManagerModal } from '@/navigation/utils'
 import { log } from '@/utils/log'
+import { writeDownloadMetadata } from './metadata'
 
 
 const throttleSave = (() => {
@@ -218,6 +219,7 @@ const runNext = async() => {
     currentJobId = jobId
 
     const result = await promise
+    currentJobId = null
 
     // react-native-fs 对非 2xx 状态码不会抛错，需要手动检查，否则错误响应会被当作下载成功
     if (result.statusCode < 200 || result.statusCode >= 300) {
@@ -238,15 +240,34 @@ const runNext = async() => {
       throw createDownloadError('DL_FS_003', phase, '文件移动后不存在，请检查存储权限或路径设置')
     }
 
-    // 下载完成
+    // 下载完成后的元数据处理是附加步骤，失败不影响音频文件本身完成。
     if (speedTimer) { clearInterval(speedTimer); speedTimer = null }
+    let metadataFailed: string[] = []
+    if (settingState.setting['download.isWriteMetadata'] || settingState.setting['download.isSaveLyric']) {
+      task.statusText = global.i18n.t('download_status_write_metadata')
+      downloadAction.updateTask(task)
+      try {
+        metadataFailed = await writeDownloadMetadata(task)
+      } catch (err) {
+        metadataFailed = ['metadata']
+        const message = err instanceof Error ? err.message : String(err)
+        log.warn(`[下载] 任务 ${task.id} 元数据处理异常：${message}`)
+      }
+    }
+
+    // 下载完成
     task.isComplate = true
     task.status = 'completed'
     task.statusText = ''
     task.progress = 1
     downloadAction.updateTask(task)
     log.info(`[下载] 任务 ${task.id} 已完成：${task.metadata.filePath}`)
-    toast(global.i18n.t('download_success'))
+    if (metadataFailed.length) {
+      log.warn(`[下载] 任务 ${task.id} 部分元数据写入失败：${metadataFailed.join('、')}`)
+      toast(global.i18n.t('download_success_metadata_warn'))
+    } else {
+      toast(global.i18n.t('download_success'))
+    }
   } catch (err: any) {
     if (speedTimer) { clearInterval(speedTimer); speedTimer = null }
     if (isPaused) return
@@ -327,14 +348,16 @@ export const createDownloadTask = async({ musicInfo, quality, showTip = true }: 
 }
 
 export const pauseTask = (id: string) => {
-  if (currentTaskId == id && currentJobId != null) {
+  const jobId = currentJobId
+  const isCurrent = currentTaskId == id && jobId != null
+  if (isCurrent) {
     isPaused = true
-    stopDownload(currentJobId)
+    stopDownload(jobId)
     if (speedTimer) { clearInterval(speedTimer); speedTimer = null }
     currentJobId = null
   }
   const t = downloadState.taskList.find(t2 => t2.id == id)
-  if (t && t.status == 'run') {
+  if (isCurrent && t && t.status == 'run') {
     t.status = 'pause'
     t.statusText = ''
     downloadAction.updateTask(t)

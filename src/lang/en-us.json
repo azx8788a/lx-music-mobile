@@ -610,5 +610,10 @@
   "setting_basic_wy_snapshot_interval_24": "24 hours",
   "setting_basic_wy_snapshot_interval_48": "48 hours",
   "setting_basic_wy_snapshot_interval_off": "Off",
-  "setting_basic_wy_snapshot_interval_tip": "Checked when opening the Netease Playlists page or starting the app; auto-updates local playlist data when the interval has passed"
+  "setting_basic_wy_snapshot_interval_tip": "Checked when opening the Netease Playlists page or starting the app; auto-updates local playlist data when the interval has passed",
+  "download_status_write_metadata": "Writing tags and lyrics",
+  "download_success_metadata_warn": "Download completed, but some tags or lyrics failed to write. See the error log for details",
+  "setting_basic_download_metadata": "Download extras",
+  "setting_basic_download_metadata_tag": "Write song tags and cover art",
+  "setting_basic_download_metadata_lyric": "Save lyrics (embed and create a same-name .lrc file)"
 }

@@ -1,8 +1,8 @@
 # LX Music 修改版 — AI 交接文档 v2
 
 > **写给下一个 AI 模型。读完这一份，你应该能立即接手开发、修改代码、打包发布。**
-> 最后更新：2026-09-23
-> 当前版本：v1.9.7
+> 最后更新：2026-09-25
+> 当前版本：v1.9.8
 
 ---
 
@@ -41,6 +41,7 @@
 - Store：`src/store/download/`（state/action/event/hook）
 - UI：`DownloadModal` / `DownloadManagerModal` / 歌曲菜单下载入口（`OnlineList/ListMenu.tsx`、`Mylist/MusicList/ListMenu.tsx`）
 - **已修复**：v1.9.5 修复了"普通模式点下载静默失败"的 bug（根因：`selectedList` 为空，下载分支什么都不做）
+- **v1.9.8 下载附加信息**：下载完成后自动写入歌曲标签（歌名/歌手/专辑）、封面，并保存歌词（内嵌到标签 + 同名 `.lrc` 文件）：核心 `src/core/download/metadata.ts`（`ape` 不支持标签，仅写 .lrc）；开关 `download.isWriteMetadata` / `download.isSaveLyric`（默认开，设置 → 基础设置 →「下载附加信息」）；附加信息失败**不阻塞**下载（toast 提示 + 日志 `[下载]`）
 
 ### 2.3 修改版公告
 - `src/navigation/components/ModNoticeModal.tsx`：10 秒倒计时同意
@@ -159,12 +160,11 @@ curl -X POST -H "Authorization: token <TOKEN_PLACEHOLDER>" \
 
 ## 7. 当前未完成任务（按优先级）
 
-### 7.1 P0：下载的文件缺少歌词/标签（刚提出的）
-- 现状：`runNext()` 下载完成时只保存了裸音频文件（mp3/flac），没有嵌入元数据和歌词
-- 要做的：下载完成后获取在线歌词 → 保存为同名 `.lrc` 文件（或嵌入 ID3 标签）
-- 关键文件：`src/core/download/index.ts`（runNext 的 finally → completed 段）
-- 歌词获取：`src/core/lyric.ts` 的 `getLyric()` / `getLyricInfo()`；各音源有 `getLyric()` 方法
-- 元数据编辑：`react-native-local-media-metadata` 已安装（项目依赖中），可从 metadata 读取/写入标签
+### 7.1 ~~P0：下载的文件缺少歌词/标签~~ ✅ 已解决（v1.9.8）
+- 下载完成后现在会自动写入歌曲标签（歌名/歌手/专辑）、封面，并保存歌词（内嵌到标签 + 同名 `.lrc` 文件；`ape` 仅写 .lrc）
+- 附加信息失败不阻塞下载：toast 提示部分信息写入失败，详情见错误日志（前缀 `[下载]`）
+- 开关：设置 → 基础设置 →「下载附加信息」（`download.isWriteMetadata` / `download.isSaveLyric`，默认开）
+- 真机验证建议：下载一首后在系统音乐 App 检查封面/歌词是否显示
 
 ### 7.2 P1：存储 CI 实验还没出最终结果
 - `.github/workflows/storage-check.yml`：第三次运行中（前两次因 KVM/APK 安装问题失败）
@@ -183,7 +183,7 @@ curl -X POST -H "Authorization: token <TOKEN_PLACEHOLDER>" \
 
 | 功能 | 文件 |
 |---|---|
-| 下载核心 | `src/core/download/index.ts` |
+| 下载核心 | `src/core/download/index.ts`，元数据/歌词写入 `src/core/download/metadata.ts` |
 | 下载选择/管理弹窗 | `src/navigation/components/DownloadModal.tsx` / `DownloadManagerModal.tsx` |
 | 歌曲菜单下载入口 | `src/components/OnlineList/ListMenu.tsx`、`src/screens/Home/Views/Mylist/MusicList/ListMenu.tsx` |
 | 存储权限 | `src/utils/storagePermission.ts` |
