@@ -634,5 +634,8 @@
   "wy_write_failed": "操作失败，请稍后重试",
   "wy_write_token_invalid": "登录状态已失效，请重新登录",
   "wy_write_no_favorite": "未找到「我喜欢的音乐」歌单",
-  "wy_write_only_wy": "仅支持收藏网易云来源的歌曲"
+  "wy_write_only_wy": "仅支持收藏网易云来源的歌曲",
+  "wy_record_pick_title": "加入网易云歌单",
+  "wy_record_pick_failed": "获取歌单失败，请重试",
+  "wy_record_pick_empty": "你的网易云账号还没有歌单"
 }

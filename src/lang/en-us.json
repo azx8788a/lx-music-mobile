@@ -634,5 +634,8 @@
   "wy_write_failed": "Action failed, please retry",
   "wy_write_token_invalid": "Login expired, please sign in again",
   "wy_write_no_favorite": "Favorite playlist not found",
-  "wy_write_only_wy": "Only NetEase songs can be favored"
+  "wy_write_only_wy": "Only NetEase songs can be favored",
+  "wy_record_pick_title": "Add to NetEase Playlist",
+  "wy_record_pick_failed": "Failed to load playlists, please retry",
+  "wy_record_pick_empty": "No playlists in your NetEase account"
 }

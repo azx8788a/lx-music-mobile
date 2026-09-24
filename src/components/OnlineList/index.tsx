@@ -8,7 +8,8 @@ import ListMusicAdd, { type MusicAddModalType as ListMusicAddType } from '@/comp
 import MultipleModeBar, { type MultipleModeBarType, type SelectMode } from './MultipleModeBar'
 import { clearMusicUrl, handleDislikeMusic, handlePlay, handlePlayLater, handleShare, handleShowMusicSourceDetail } from './listAction'
 import { createStyle, toast } from '@/utils/tools'
-import { favoriteToWyPlaylist, toastWyWriteResult, wyTrackIdsFromMusics } from '@/core/wyPlaylistWrite'
+import WyPlaylistPicker, { type WyPlaylistPickerType } from '@/components/WyPlaylistPicker'
+import { addTracksToWyPlaylist, favoriteToWyPlaylist, toastWyWriteResult, wyTrackIdsFromMusics } from '@/core/wyPlaylistWrite'
 
 export interface OnlineListProps {
   onRefresh: ListProps['onRefresh']
@@ -39,6 +40,7 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
   const listMusicMultiAddRef = useRef<ListAddMultiType>(null)
   const listMenuRef = useRef<ListMenuType>(null)
   // const loadingMaskRef = useRef<LoadingMaskType>(null)
+  const wyPlaylistPickerRef = useRef<WyPlaylistPickerType>(null)
 
   useImperativeHandle(ref, () => ({
     setList(list, isAppend = false, showSource = false) {
@@ -91,6 +93,20 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
     })
   }
 
+  const handleWyAddToPlaylist = (info: SelectInfo) => {
+    const list = info.selectedList.length ? info.selectedList : [info.musicInfo]
+    const trackIds = wyTrackIdsFromMusics(list)
+    if (!trackIds.length) {
+      toast(global.i18n.t('wy_write_only_wy'))
+      return
+    }
+    wyPlaylistPickerRef.current?.show(playlist => {
+      void addTracksToWyPlaylist(playlist, trackIds).then(toastWyWriteResult).catch(err => {
+        toast(global.i18n.t((err as { code?: string })?.code == 'NO_TOKEN' ? 'wy_playlist_token_empty' : 'wy_write_failed'))
+      })
+    })
+  }
+
   return (
     <View style={styles.container}>
       <View style={{ flex: 1 }}>
@@ -116,6 +132,7 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
       </View>
       <ListMusicAdd ref={listMusicAddRef} onAdded={() => { hancelExitSelect() }} />
       <ListMusicMultiAdd ref={listMusicMultiAddRef} onAdded={() => { hancelExitSelect() }} />
+      <WyPlaylistPicker ref={wyPlaylistPickerRef} />
       <ListMenu
         ref={listMenuRef}
         onPlay={info => { handlePlay(info.musicInfo) }}
@@ -126,6 +143,7 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
         onRemoveCache={info => { void clearMusicUrl(info.musicInfo) }}
         onDislikeMusic={info => { void handleDislikeMusic(info.musicInfo) }}
         onWyFavorite={handleWyFavorite}
+        onWyAddToPlaylist={handleWyAddToPlaylist}
       />
       {/* <LoadingMask ref={loadingMaskRef} /> */}
     </View>

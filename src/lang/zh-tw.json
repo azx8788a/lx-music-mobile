@@ -634,5 +634,8 @@
   "wy_write_failed": "操作失敗，請稍後重試",
   "wy_write_token_invalid": "登入狀態已失效，請重新登入",
   "wy_write_no_favorite": "未找到「我喜歡的音樂」歌單",
-  "wy_write_only_wy": "僅支援收藏網易雲來源的歌曲"
+  "wy_write_only_wy": "僅支援收藏網易雲來源的歌曲",
+  "wy_record_pick_title": "加入網易雲歌單",
+  "wy_record_pick_failed": "獲取歌單失敗，請重試",
+  "wy_record_pick_empty": "你的網易雲帳號還沒有歌單"
 }

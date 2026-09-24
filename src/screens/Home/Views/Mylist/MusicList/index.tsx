@@ -7,7 +7,8 @@ import List, { type ListType } from './List'
 import ListMusicAdd, { type MusicAddModalType as ListMusicAddType } from '@/components/MusicAddModal'
 import ListMusicMultiAdd, { type MusicMultiAddModalType as ListAddMultiType } from '@/components/MusicMultiAddModal'
 import { createStyle, toast } from '@/utils/tools'
-import { favoriteToWyPlaylist, toastWyWriteResult, wyTrackIdsFromMusics } from '@/core/wyPlaylistWrite'
+import WyPlaylistPicker, { type WyPlaylistPickerType } from '@/components/WyPlaylistPicker'
+import { addTracksToWyPlaylist, favoriteToWyPlaylist, toastWyWriteResult, wyTrackIdsFromMusics } from '@/core/wyPlaylistWrite'
 import { type LayoutChangeEvent, View } from 'react-native'
 import ActiveList, { type ActiveListType } from './ActiveList'
 import MultipleModeBar, { type SelectMode, type MultipleModeBarType } from './MultipleModeBar'
@@ -31,6 +32,7 @@ export default () => {
   const metadataEditTypeRef = useRef<MetadataEditType>(null)
   const listMenuRef = useRef<ListMenuType>(null)
   const musicToggleModalRef = useRef<MusicToggleModalType>(null)
+  const wyPlaylistPickerRef = useRef<WyPlaylistPickerType>(null)
   const layoutHeightRef = useRef<number>(0)
   const isShowMultipleModeBar = useRef(false)
   const isShowSearchBarModeBar = useRef(false)
@@ -150,6 +152,7 @@ export default () => {
       </View>
       <ListMusicAdd ref={listMusicAddRef} onAdded={hancelExitSelect} />
       <ListMusicMultiAdd ref={listMusicMultiAddRef} onAdded={hancelExitSelect} />
+      <WyPlaylistPicker ref={wyPlaylistPickerRef} />
       <MusicPositionModal ref={musicPositionModalRef}
         onUpdatePosition={(info, postion) => { handleUpdateMusicPosition(postion, info.listId, info.musicInfo, info.selectedList, hancelExitSelect) }} />
       <ListMenu
@@ -175,6 +178,19 @@ export default () => {
           }
           void favoriteToWyPlaylist(trackIds).then(toastWyWriteResult).catch(err => {
             toast(global.i18n.t((err as { code?: string })?.code == 'NO_TOKEN' ? 'wy_playlist_token_empty' : 'wy_write_failed'))
+          })
+        }}
+        onWyAddToPlaylist={info => {
+          hancelExitSelect()
+          const trackIds = wyTrackIdsFromMusics(info.selectedList.length ? info.selectedList : [info.musicInfo])
+          if (!trackIds.length) {
+            toast(global.i18n.t('wy_write_only_wy'))
+            return
+          }
+          wyPlaylistPickerRef.current?.show(playlist => {
+            void addTracksToWyPlaylist(playlist, trackIds).then(toastWyWriteResult).catch(err => {
+              toast(global.i18n.t((err as { code?: string })?.code == 'NO_TOKEN' ? 'wy_playlist_token_empty' : 'wy_write_failed'))
+            })
           })
         }}
       />
