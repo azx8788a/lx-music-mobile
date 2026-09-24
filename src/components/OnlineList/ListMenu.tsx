@@ -24,6 +24,7 @@ export interface ListMenuProps {
   onMusicSourceDetail: (selectInfo: SelectInfo) => void
   onRemoveCache: (selectInfo: SelectInfo) => void
   onDislikeMusic: (selectInfo: SelectInfo) => void
+  onWyFavorite?: (selectInfo: SelectInfo) => void
 }
 export interface ListMenuType {
   show: (selectInfo: SelectInfo, position: Position) => void
@@ -61,6 +62,7 @@ export default forwardRef<ListMenuType, ListMenuProps>((props: ListMenuProps, re
       { action: 'playLater', label: t('play_later') },
       { action: 'download', label: t('download') },
       { action: 'add', label: t('add_to') },
+      { action: 'wyFavorite', label: t('wy_record_favorite') },
       { action: 'copyName', label: t('copy_name') },
       { action: 'musicSourceDetail', label: t('music_source_detail') },
       { action: 'removeCache', disabled: !has_url_cache, label: t('list_remove_cache') },
@@ -100,6 +102,9 @@ export default forwardRef<ListMenuType, ListMenuProps>((props: ListMenuProps, re
       }
       case 'add':
         props.onAdd(selectInfo)
+        break
+      case 'wyFavorite':
+        props.onWyFavorite?.(selectInfo)
         break
       case 'copyName':
         props.onCopyName(selectInfo)

@@ -627,5 +627,12 @@
   "wy_radio_failed": "获取漫游歌曲失败，请稍后重试",
   "wy_radio_refresh_tip": "下拉刷新获取新一批歌曲",
   "wy_heartbeat_entry": "心动模式",
-  "wy_radio_heartbeat": "心动模式"
+  "wy_radio_heartbeat": "心动模式",
+  "wy_record_favorite": "收藏到网易云",
+  "wy_write_success": "已加入「{name}」",
+  "wy_write_duplicated": "歌曲已在歌单中",
+  "wy_write_failed": "操作失败，请稍后重试",
+  "wy_write_token_invalid": "登录状态已失效，请重新登录",
+  "wy_write_no_favorite": "未找到「我喜欢的音乐」歌单",
+  "wy_write_only_wy": "仅支持收藏网易云来源的歌曲"
 }

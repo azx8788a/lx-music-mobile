@@ -28,6 +28,7 @@ export interface ListMenuProps {
   onRemoveCache: (selectInfo: SelectInfo) => void
   onDislikeMusic: (selectInfo: SelectInfo) => void
   onRemove: (selectInfo: SelectInfo) => void
+  onWyFavorite?: (selectInfo: SelectInfo) => void
 }
 export interface ListMenuType {
   show: (selectInfo: SelectInfo, position: Position) => void
@@ -74,6 +75,7 @@ export default forwardRef<ListMenuType, ListMenuProps>((props, ref) => {
       { action: 'playLater', label: t('play_later') },
       { action: 'download', disabled: isLocal, label: t('download') },
       { action: 'add', label: t('add_to') },
+      { action: 'wyFavorite', disabled: isLocal, label: t('wy_record_favorite') },
       { action: 'move', label: t('move_to') },
       { action: 'changePosition', label: t('change_position') },
       { action: 'toggleSource', label: t('toggle_source') },
@@ -131,6 +133,9 @@ export default forwardRef<ListMenuType, ListMenuProps>((props, ref) => {
         // selectedListRef.current.length
         //   ? setVisibleMusicMultiAddModal(true)
         //   : setVisibleMusicAddModal(true)
+        break
+      case 'wyFavorite':
+        props.onWyFavorite?.(selectInfo)
         break
       case 'move':
         props.onMove(selectInfo)

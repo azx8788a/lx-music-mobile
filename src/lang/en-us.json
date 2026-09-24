@@ -627,5 +627,12 @@
   "wy_radio_failed": "Failed to load radio songs, please retry",
   "wy_radio_refresh_tip": "Pull down to fetch a new batch",
   "wy_heartbeat_entry": "Heartbeat",
-  "wy_radio_heartbeat": "Heartbeat Mode"
+  "wy_radio_heartbeat": "Heartbeat Mode",
+  "wy_record_favorite": "Favorite to NetEase",
+  "wy_write_success": "Added to \"{name}\"",
+  "wy_write_duplicated": "Song already in playlist",
+  "wy_write_failed": "Action failed, please retry",
+  "wy_write_token_invalid": "Login expired, please sign in again",
+  "wy_write_no_favorite": "Favorite playlist not found",
+  "wy_write_only_wy": "Only NetEase songs can be favored"
 }
