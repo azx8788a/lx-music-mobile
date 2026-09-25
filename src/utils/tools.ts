@@ -241,12 +241,27 @@ export const clipboardWriteText = (str: string) => {
 }
 
 
+// 首次播放前的系统提示串行化，防止两个 Alert 同时弹出导致 Android 窗口焦点异常（界面变暗、触摸失效）
+let systemTipLock: Promise<void> = Promise.resolve()
+
+const runSystemTipSerially = async(task: () => Promise<void>): Promise<void> => {
+  const prev = systemTipLock
+  let resolveLock: (() => void) | undefined
+  systemTipLock = new Promise(resolve => { resolveLock = resolve })
+  await prev
+  try {
+    await task()
+  } finally {
+    resolveLock?.()
+  }
+}
+
 export const checkNotificationPermission = async() => {
   const isHide = await getData(storageDataPrefix.notificationTipEnable)
   if (isHide != null) return
   const enabled = await isNotificationsEnabled()
   if (enabled) return
-  return new Promise<void>((resolve) => {
+  await runSystemTipSerially(async() => new Promise<void>((resolve) => {
     Alert.alert(
       global.i18n.t('notifications_check_title'),
       global.i18n.t('notifications_check_tip'),
@@ -279,7 +294,7 @@ export const checkNotificationPermission = async() => {
         },
       ],
     )
-  })
+  }))
 }
 
 
@@ -288,7 +303,7 @@ export const checkIgnoringBatteryOptimization = async() => {
   if (isHide != null) return
   const enabled = await isIgnoringBatteryOptimization()
   if (enabled) return
-  return new Promise<void>((resolve) => {
+  await runSystemTipSerially(async() => new Promise<void>((resolve) => {
     Alert.alert(
       global.i18n.t('ignoring_battery_optimization_check_title'),
       global.i18n.t('ignoring_battery_optimization_check_tip'),
@@ -321,8 +336,9 @@ export const checkIgnoringBatteryOptimization = async() => {
         },
       ],
     )
-  })
+  }))
 }
+
 export const resetNotificationPermissionCheck = async() => {
   return removeData(storageDataPrefix.notificationTipEnable)
 }
