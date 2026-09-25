@@ -4,7 +4,7 @@ import Search from '../Views/Search'
 import SongList from '../Views/SongList'
 import Mylist from '../Views/Mylist'
 import Leaderboard from '../Views/Leaderboard'
-import WySonglist from '../Views/WySonglist'
+import WyZone from '../Views/WyZone'
 import Setting from '../Views/Setting'
 import commonState, { type InitState as CommonState } from '@/store/common/state'
 import { createStyle } from '@/utils/tools'
@@ -161,7 +161,7 @@ const MylistPage = () => {
 }
 const WySonglistPage = () => {
   const [visible, setVisible] = useState(commonState.navActiveId == 'nav_wy_songlist')
-  const component = useMemo(() => <WySonglist />, [])
+  const component = useMemo(() => <WyZone />, [])
   useEffect(() => {
     const handleNavIdUpdate = (id: CommonState['navActiveId']) => {
       if (id == 'nav_wy_songlist') {
