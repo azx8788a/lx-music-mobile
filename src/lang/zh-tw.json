@@ -644,5 +644,8 @@
   "wy_zone_playlist_title": "我的歌單",
   "wy_zone_playlist_desc": "查看收藏歌單（本機快照，離線可用）",
   "wy_radio_empty": "本次未獲取到歌曲，請稍後再試",
-  "wy_radio_playing": "開始播放「{mode}」（{count} 首）"
+  "wy_radio_playing": "開始播放「{mode}」（{count} 首）",
+  "list_add_wy_section_title": "網易雲",
+  "list_add_wy_favorite": "收藏",
+  "list_add_wy_playlist": "添加到歌單"
 }
