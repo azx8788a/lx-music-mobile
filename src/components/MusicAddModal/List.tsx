@@ -90,6 +90,17 @@ const WySection = ({ musicInfo }: { musicInfo: LX.Music.MusicInfo }) => {
   // 检查是否登录
   const isLoggedIn = !!settingState.setting['wy.musicUToken']
 
+  // 写入链路异常的统一提示（NO_TOKEN/INVALID_TOKEN/其他）
+  const showWriteError = (err: any) => {
+    if (err?.code == 'NO_TOKEN') {
+      toast(t('wy_playlist_token_empty'))
+    } else if (err?.code == 'INVALID_TOKEN') {
+      toast(t('wy_write_token_invalid'))
+    } else {
+      toast(t('wy_write_failed'))
+    }
+  }
+
   // 收藏到"我喜欢的音乐"
   const handleFavorite = async() => {
     if (!isLoggedIn) {
@@ -101,8 +112,12 @@ const WySection = ({ musicInfo }: { musicInfo: LX.Music.MusicInfo }) => {
       toast(t('wy_write_only_wy'))
       return
     }
-    const result = await favoriteToWyPlaylist(trackIds)
-    toastWyWriteResult(result)
+    try {
+      const result = await favoriteToWyPlaylist(trackIds)
+      toastWyWriteResult(result)
+    } catch (err) {
+      showWriteError(err)
+    }
   }
 
   // 添加到指定歌单
@@ -117,8 +132,12 @@ const WySection = ({ musicInfo }: { musicInfo: LX.Music.MusicInfo }) => {
       return
     }
     pickerRef.current?.show(async(playlist) => {
-      const result = await addTracksToWyPlaylist(playlist, trackIds)
-      toastWyWriteResult(result)
+      try {
+        const result = await addTracksToWyPlaylist(playlist, trackIds)
+        toastWyWriteResult(result)
+      } catch (err) {
+        showWriteError(err)
+      }
     })
   }
 

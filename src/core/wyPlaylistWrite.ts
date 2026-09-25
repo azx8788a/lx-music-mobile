@@ -14,6 +14,7 @@ export interface WyPlaylistItem {
   trackCount: number
   author: string
   img: string
+  specialType?: number
 }
 
 // 从歌曲列表提取网易云曲目 ID（非网易云来源返回空）
@@ -51,24 +52,26 @@ const ensureToken = (): string => {
 }
 
 // 拉取用户歌单（创建的 + 收藏的）
+// 不按 trackCount 过滤：空的「我喜欢的音乐」与新建空歌单也需要能被定位/选择
 export const fetchUserPlaylists = async(): Promise<WyPlaylistItem[]> => {
   const token = ensureToken()
   const profile = await getLoginStatus(token)
   const list = await getUserPlaylistList({ uid: profile.userId, token })
-  return list
-    .filter((item: any) => item.trackCount > 0)
-    .map((item: any) => ({
-      id: String(item.id),
-      name: item.name,
-      trackCount: item.trackCount,
-      author: item.creator?.nickname ?? '',
-      img: item.coverImgUrl ?? '',
-    }))
+  return list.map((item: any) => ({
+    id: String(item.id),
+    name: item.name,
+    trackCount: item.trackCount ?? 0,
+    author: item.creator?.nickname ?? '',
+    img: item.coverImgUrl ?? '',
+    specialType: item.specialType ?? 0,
+  }))
 }
 
-// 定位「我喜欢的音乐」歌单（subscribedCount 标记，或名为 我喜欢的音乐；不匹配则 null）
+// 定位「我喜欢的音乐」歌单：优先网易云 specialType==5 标记，名称匹配兜底（兼容改名/空歌单）
 export const findFavoritePlaylist = (playlists: WyPlaylistItem[]): WyPlaylistItem | null => {
-  return playlists.find(p => p.name == '我喜欢的音乐') ?? null
+  const byType = playlists.find(p => p.specialType === 5)
+  if (byType) return byType
+  return playlists.find(p => p.name == '我喜欢的音乐' || p.name == '喜欢的音乐') ?? null
 }
 
 // 已存在判断：先查本地缓存的歌单歌曲（getListDetailAll），无数据则提交前不阻断

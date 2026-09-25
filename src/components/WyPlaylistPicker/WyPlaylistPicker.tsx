@@ -9,6 +9,7 @@ import { createStyle } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
 import { fetchUserPlaylists, type WyPlaylistItem } from '@/core/wyPlaylistWrite'
+import { getSnapshotMeta } from '@/core/wySnapshot'
 
 export interface WyPlaylistPickerType {
   show: (onPick: (playlist: WyPlaylistItem) => void) => void
@@ -27,8 +28,21 @@ export default forwardRef<WyPlaylistPickerType, {}>((props, ref) => {
     fetchUserPlaylists().then(list => {
       setPlaylists(list)
       setStatus(list.length ? 'list' : 'empty')
-    }).catch((err: any) => {
-      setStatus(err?.code == 'INVALID_TOKEN' ? 'error' : 'error')
+    }).catch(async() => {
+      // 在线获取失败（登录态失效/网络异常等）时回退到本地快照歌单，保证离线可选
+      let fallback: WyPlaylistItem[] = []
+      try {
+        const meta = await getSnapshotMeta()
+        fallback = meta?.playlists ?? []
+      } catch {
+        fallback = []
+      }
+      if (fallback.length) {
+        setPlaylists(fallback)
+        setStatus('list')
+      } else {
+        setStatus('error')
+      }
     })
   }
 
