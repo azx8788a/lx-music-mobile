@@ -14,6 +14,7 @@ export interface WySnapshotPlaylist {
   author: string
   img: string
   updatedAt: number
+  specialType?: number
 }
 
 export interface WySnapshotMeta {
@@ -57,7 +58,7 @@ export const saveSnapshot = async(
   try {
     const profile = await getLoginStatus(token)
     const list = await getUserPlaylistList({ uid: profile.userId, token })
-    const playlists = list.filter((item: any) => item.trackCount > 0)
+    const playlists = list
     const oldMeta = await getSnapshotMeta()
 
     const saved: WySnapshotPlaylist[] = []
@@ -73,6 +74,7 @@ export const saveSnapshot = async(
         author: item.creator?.nickname ?? '',
         img: item.coverImgUrl ?? '',
         updatedAt: Date.now(),
+        specialType: item.specialType ?? 0,
       }
       try {
         // 带上 token 请求，保证私有歌单（收藏的私密歌单）也可拉取

@@ -23,20 +23,30 @@ export default forwardRef<WyPlaylistPickerType, {}>((props, ref) => {
   const [status, setStatus] = useState<'loading' | 'list' | 'empty' | 'error' | 'idle'>('idle')
   const [playlists, setPlaylists] = useState<WyPlaylistItem[]>([])
 
+  const loadSnapshot = async(): Promise<WyPlaylistItem[]> => {
+    try {
+      const meta = await getSnapshotMeta()
+      return meta?.playlists.map(item => ({
+        id: item.id,
+        name: item.name,
+        trackCount: item.trackCount,
+        author: item.author,
+        img: item.img,
+        specialType: item.specialType ?? 0,
+      })) ?? []
+    } catch {
+      return []
+    }
+  }
+
   const load = () => {
     setStatus('loading')
-    fetchUserPlaylists().then(list => {
-      setPlaylists(list)
-      setStatus(list.length ? 'list' : 'empty')
+    fetchUserPlaylists().then(async list => {
+      const playlists = list.length ? list : await loadSnapshot()
+      setPlaylists(playlists)
+      setStatus(playlists.length ? 'list' : 'empty')
     }).catch(async() => {
-      // 在线获取失败（登录态失效/网络异常等）时回退到本地快照歌单，保证离线可选
-      let fallback: WyPlaylistItem[] = []
-      try {
-        const meta = await getSnapshotMeta()
-        fallback = meta?.playlists ?? []
-      } catch {
-        fallback = []
-      }
+      const fallback = await loadSnapshot()
       if (fallback.length) {
         setPlaylists(fallback)
         setStatus('list')

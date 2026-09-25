@@ -5,6 +5,7 @@
 import { getLoginStatus, getUserPlaylistList } from '@/utils/musicSdk/wy/userPlaylist'
 import { addTracksToPlaylist } from '@/utils/musicSdk/wy/playlistTracks'
 import { getListDetailAll } from '@/core/songlist'
+import { getSnapshotMeta } from '@/core/wySnapshot'
 import settingState from '@/store/setting/state'
 import { toast } from '@/utils/tools'
 
@@ -121,7 +122,23 @@ export const addTracksToWyPlaylist = async(playlist: WyPlaylistItem, trackIds: s
  * 收藏歌曲到「我喜欢的音乐」歌单
  */
 export const favoriteToWyPlaylist = async(trackIds: string[]): Promise<TrackWriteResult> => {
-  const playlists = await fetchUserPlaylists()
+  let playlists: WyPlaylistItem[] = []
+  try {
+    playlists = await fetchUserPlaylists()
+  } catch {
+    playlists = []
+  }
+  if (!playlists.length) {
+    const meta = await getSnapshotMeta()
+    playlists = meta?.playlists.map(item => ({
+      id: item.id,
+      name: item.name,
+      trackCount: item.trackCount,
+      author: item.author,
+      img: item.img,
+      specialType: item.specialType ?? 0,
+    })) ?? []
+  }
   const favorite = findFavoritePlaylist(playlists)
   if (!favorite) {
     return { playlistName: '', duplicated: false, error: { code: 'NO_FAVORITE', message: '未找到我喜欢的音乐歌单' } }
