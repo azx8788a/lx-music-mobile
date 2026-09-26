@@ -10,6 +10,7 @@ import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
 import { fetchUserPlaylists, type WyPlaylistItem } from '@/core/wyPlaylistWrite'
 import { getSnapshotMeta } from '@/core/wySnapshot'
+import { showWyLoginModal } from '@/navigation/utils'
 
 export interface WyPlaylistPickerType {
   show: (onPick: (playlist: WyPlaylistItem) => void) => void
@@ -70,6 +71,11 @@ export default forwardRef<WyPlaylistPickerType, {}>((props, ref) => {
     // 组件级隐藏
   }, [])
 
+  const handleRelogin = () => {
+    dialogRef.current?.setVisible(false)
+    showWyLoginModal()
+  }
+
   const handlePick = (playlist: WyPlaylistItem) => {
     dialogRef.current?.setVisible(false)
     onPickRef.current(playlist)
@@ -88,9 +94,14 @@ export default forwardRef<WyPlaylistPickerType, {}>((props, ref) => {
           status == 'error'
             ? <View style={styles.center}>
                 <Text size={12} style={styles.tip}>{t('wy_record_pick_failed')}</Text>
-                <Button style={{ ...styles.btn, backgroundColor: theme['c-button-background'] }} onPress={load}>
-                  <Text color={theme['c-button-font']}>{t('wy_playlist_retry')}</Text>
-                </Button>
+                <View style={styles.btnRow}>
+                  <Button style={{ ...styles.btn, ...styles.btnGap, backgroundColor: theme['c-button-background'] }} onPress={load}>
+                    <Text color={theme['c-button-font']}>{t('wy_playlist_retry')}</Text>
+                  </Button>
+                  <Button style={{ ...styles.btn, backgroundColor: theme['c-button-background'] }} onPress={handleRelogin}>
+                    <Text color={theme['c-button-font']}>{t('wy_playlist_relogin')}</Text>
+                  </Button>
+                </View>
               </View>
             : null
         }
@@ -150,6 +161,12 @@ const styles = createStyle({
     paddingLeft: 22,
     paddingRight: 22,
     borderRadius: 4,
+  },
+  btnRow: {
+    flexDirection: 'row',
+  },
+  btnGap: {
+    marginRight: 15,
   },
   listWrap: {
     flex: 1,
