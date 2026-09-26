@@ -1,12 +1,13 @@
 // 网易云歌单写入（Stage 4D/4E）：
-// - 收藏到「我喜欢的音乐」：走官方红心接口（/weapi/radio/like），无需定位歌单
-// - 加入指定歌单：通过 getUserPlaylistList 选择目标歌单（不硬编码 ID）
+// - 收藏「我喜欢的音乐」与加入指定歌单统一走歌单写入接口（manipulate/tracks）
+//   （真机实证：radio/like 红心接口在部分网络环境持续命中风控 -460，已弃用该通道）
+// - 收藏歌单通过 specialType==5 定位（在线优先，本地快照兜底）
 // - 使用现有歌单数据做前端去重；尾部状态由调用方决定是否构建失败
 // - token 失效 / 重复 / 网络失败都由提示展示（见 UI 层）
 import { getLoginStatus, getUserPlaylistList } from '@/utils/musicSdk/wy/userPlaylist'
 import { addTracksToPlaylist } from '@/utils/musicSdk/wy/playlistTracks'
-import { checkTrackLiked, likeTrack } from '@/utils/musicSdk/wy/like'
 import { getListDetailAll } from '@/core/songlist'
+import { getSnapshotMeta } from '@/core/wySnapshot'
 import settingState from '@/store/setting/state'
 import { toast } from '@/utils/tools'
 
@@ -78,11 +79,12 @@ export const fetchUserPlaylists = async(): Promise<WyPlaylistItem[]> => {
   }))
 }
 
-// 定位「我喜欢的音乐」歌单：优先网易云 specialType==5 标记，名称匹配兜底（兼容改名/空歌单）
+// 定位「我喜欢的音乐」歌单：优先网易云 specialType==5 标记，名称后缀兜底
+// （服务端返回的 name 带昵称前缀，如「某某喜欢的音乐」）
 export const findFavoritePlaylist = (playlists: WyPlaylistItem[]): WyPlaylistItem | null => {
   const byType = playlists.find(p => p.specialType === 5)
   if (byType) return byType
-  return playlists.find(p => p.name == '我喜欢的音乐' || p.name == '喜欢的音乐') ?? null
+  return playlists.find(p => p.name.endsWith('喜欢的音乐')) ?? null
 }
 
 // 已存在判断：先查本地缓存的歌单歌曲（getListDetailAll），无数据则提交前不阻断
@@ -131,40 +133,44 @@ export const addTracksToWyPlaylist = async(playlist: WyPlaylistItem, trackIds: s
 
 /**
  * 收藏歌曲到「我喜欢的音乐」：
- * - 走官方红心接口（无需定位歌单 pid，消除"未找到歌单"类问题）
- * - 写前检查已喜欢状态（检查失败时不阻断）；已喜欢按重复处理
- * - 红心接口为单曲接口，多首选时串行处理
+ * - 真机实证：歌单写入接口可用，radio/like 红心接口持续命中风控（-460），故统一走歌单写入
+ * - 定位收藏歌单：在线优先（specialType==5），失败时回退本地快照
  */
 export const favoriteToWyPlaylist = async(trackIds: string[]): Promise<TrackWriteResult> => {
-  const result: TrackWriteResult = { playlistName: '', duplicated: false, favorite: true, error: null }
-  let token = ''
+  let playlists: WyPlaylistItem[] = []
+  let onlineError: { code?: string, message: string } | null = null
   try {
-    token = ensureToken()
+    playlists = await fetchUserPlaylists()
   } catch (err) {
-    result.error = { code: 'NO_TOKEN', message: err instanceof Error ? err.message : String(err) }
-    return result
+    const e = err as { code?: string, message?: string }
+    onlineError = { code: e.code, message: e.message ?? String(err) }
+    playlists = []
   }
-  let added = 0
-  let duplicated = 0
-  for (const trackId of trackIds) {
-    try {
-      const alreadyLiked = await checkTrackLiked({ trackId, token })
-      if (alreadyLiked === true) {
-        duplicated++
-        continue
-      }
-      await likeTrack({ trackId, token })
-      added++
-    } catch (err) {
-      const e = err as { code?: string, message?: string }
-      if (e?.code == 'TRACK_DUPLICATED') {
-        duplicated++
-        continue
-      }
-      result.error = { code: e?.code ?? 'NETWORK', message: e?.message ?? String(err) }
-      return result
+  let usedSnapshot = false
+  if (!playlists.length) {
+    const meta = await getSnapshotMeta()
+    const snapshot = meta?.playlists ?? []
+    if (snapshot.length) {
+      usedSnapshot = true
+      playlists = snapshot.map(item => ({
+        id: item.id,
+        name: item.name,
+        trackCount: item.trackCount,
+        author: item.author,
+        img: item.img,
+        specialType: item.specialType ?? 0,
+      }))
     }
   }
-  result.duplicated = added === 0 && duplicated > 0
+  const favorite = findFavoritePlaylist(playlists)
+  if (!favorite) {
+    // 在线获取失败且无本地快照可用时，直接反馈真实原因，避免误报「未找到歌单」
+    if (!usedSnapshot && onlineError) {
+      return { playlistName: '', duplicated: false, favorite: true, error: { code: onlineError.code ?? 'NETWORK', message: onlineError.message } }
+    }
+    return { playlistName: '', duplicated: false, favorite: true, error: { code: 'NO_FAVORITE', message: '未找到我喜欢的音乐歌单' } }
+  }
+  const result = await addTracksToWyPlaylist(favorite, trackIds)
+  result.favorite = true
   return result
 }

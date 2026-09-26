@@ -1,4 +1,6 @@
 // 网易云「我喜欢的音乐」（红心）写入 API
+// ⚠️ 当前未接入 UI：真机实证该通道（radio/like）在部分网络环境持续命中风控（-460），
+//    收藏已统一改走歌单写入接口（见 core/wyPlaylistWrite.ts）；本文件保留实现供后续参考
 // - 红心：/weapi/radio/like（官方客户端小红心接口，无需定位歌单 pid）
 // - 写前检查：/weapi/song/like/check（防重复；检查失败返回 null 不阻断）
 // - csrf_token / __csrf / os=pc 按网易云 Web 端标准环境补齐
