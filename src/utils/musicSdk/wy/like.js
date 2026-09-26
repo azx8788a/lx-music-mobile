@@ -4,7 +4,7 @@
 // - csrf_token / __csrf / os=pc 按网易云 Web 端标准环境补齐
 import { weapi } from './utils/crypto'
 import { httpFetch } from '../../request'
-import { getWyCsrf } from '../../../wyCsrf'
+import { getWyCsrf } from '../../wyCsrf'
 
 
 const successCode = 200

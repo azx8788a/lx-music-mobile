@@ -7,7 +7,7 @@
 // - 301 登录态失效；-460 网络环境风控
 import { weapi } from './utils/crypto'
 import { httpFetch } from '../../request'
-import { getWyCsrf } from '../../../wyCsrf'
+import { getWyCsrf } from '../../wyCsrf'
 
 
 const successCode = 200

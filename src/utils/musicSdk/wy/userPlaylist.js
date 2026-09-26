@@ -3,7 +3,7 @@
 // 写操作防风控：Cookie 带 __csrf、os=pc，payload 带 csrf_token（来源见 wyCsrf）
 import { weapi } from './utils/crypto'
 import { httpFetch } from '../../request'
-import { getWyCsrf } from '../../../wyCsrf'
+import { getWyCsrf } from '../../wyCsrf'
 
 
 const successCode = 200
