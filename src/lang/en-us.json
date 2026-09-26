@@ -647,5 +647,8 @@
   "wy_radio_playing": "Playing {mode} ({count} songs)",
   "list_add_wy_section_title": "NetEase",
   "list_add_wy_favorite": "Favorite",
-  "list_add_wy_playlist": "Add to Playlist"
+  "list_add_wy_playlist": "Add to Playlist",
+  "wy_write_favorite_success": "Added to NetEase \"My Favorite Music\"",
+  "wy_write_unsupported": "This song cannot be liked due to copyright or membership limits",
+  "wy_write_risk_control": "Network environment flagged as risky, try again later"
 }

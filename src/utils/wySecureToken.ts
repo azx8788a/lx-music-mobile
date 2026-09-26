@@ -6,6 +6,7 @@ import { getData, removeData, saveData } from '@/plugins/storage'
 import { storageDataPrefix } from '@/config/constant'
 import settingState from '@/store/setting/state'
 import { decryptString, encryptString } from '@/utils/nativeModules/secureStore'
+import { setCachedWyCsrf } from '@/utils/wyCsrf'
 import { log } from '@/utils/log'
 
 const getErrorMessage = (err: unknown) => err instanceof Error ? err.message : String(err)
@@ -49,6 +50,17 @@ const persistSetting = async() => {
  * 2. 解密失败时不会启用一个错误的登录状态
  */
 export const initWyTokenStorage = async(setting: LX.AppSetting): Promise<void> => {
+  // 读取持久化的 __csrf（供 weapi 请求层使用；失败不影响登录主流程）
+  try {
+    const csrfCipher = await getData<string>(storageDataPrefix.wyCsrfSecure)
+    if (csrfCipher) {
+      const csrf = await decryptString(csrfCipher)
+      if (csrf) setCachedWyCsrf(csrf)
+    }
+  } catch (err) {
+    log.warn(`[WY 安全存储] 读取 CSRF 失败：${getErrorMessage(err)}`)
+  }
+
   const plaintext = setting['wy.musicUToken']
 
   let encrypted: string | null = null
@@ -98,14 +110,25 @@ export const initWyTokenStorage = async(setting: LX.AppSetting): Promise<void> =
 
 /**
  * 保存 Token（登录成功 / 手动修改）：加密并回读校验后写入，内存设置立即生效
+ * @param token MUSIC_U
+ * @param csrf 可选的 __csrf（WebView 登录链路提取）；为空时保留已有值
  * @returns 是否已加密保存（false 表示仅保留在运行内存/降级到了原有方式）
  */
-export const saveWyToken = async(token: string): Promise<boolean> => {
+export const saveWyToken = async(token: string, csrf = ''): Promise<boolean> => {
   if (!token) {
     await clearWyToken()
     return true
   }
   applyToSettingState(token)
+  if (csrf) {
+    setCachedWyCsrf(csrf)
+    try {
+      const csrfCipher = await encryptString(csrf)
+      await saveData(storageDataPrefix.wyCsrfSecure, csrfCipher)
+    } catch (err) {
+      log.warn(`[WY 安全存储] CSRF 保存失败（不影响登录）：${getErrorMessage(err)}`)
+    }
+  }
   try {
     const cipherText = await encryptString(token)
     await saveData(storageDataPrefix.wyMusicUSecure, cipherText)
@@ -138,8 +161,10 @@ export const saveWyToken = async(token: string): Promise<boolean> => {
  */
 export const clearWyToken = async(): Promise<void> => {
   applyToSettingState('')
+  setCachedWyCsrf('')
   try {
     await removeData(storageDataPrefix.wyMusicUSecure)
+    await removeData(storageDataPrefix.wyCsrfSecure)
     await persistSetting()
     log.info('[WY 安全存储] 已清除加密登录 Token')
   } catch (err) {

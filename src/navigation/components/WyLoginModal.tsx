@@ -34,6 +34,12 @@ const pickMusicU = (cookie: string) => {
   return musicU
 }
 
+// 从 "name=value; name2=value2" 形式的 Cookie 字符串中提取指定名称的值（如 __csrf）
+const pickCookieValue = (cookie: string, name: string) => {
+  const match = cookie.match(new RegExp(`${name}=([^;\\s]+)`))
+  return match ? match[1] : ''
+}
+
 const WyLoginModal = ({ componentId }: { componentId: string }) => {
   const theme = useTheme()
   const t = useI18n()
@@ -52,11 +58,11 @@ const WyLoginModal = ({ componentId }: { componentId: string }) => {
     }
   }
 
-  const handleSuccess = async(musicU: string, userInfo: { uid: string, nickname: string, avatarUrl: string }) => {
+  const handleSuccess = async(musicU: string, csrf: string, userInfo: { uid: string, nickname: string, avatarUrl: string }) => {
     // 将 WebView 中的 Cookie 落盘，下次打开 App 时浏览器内仍是登录状态
     void flushWebViewCookie()
-    // 保存登录状态（Token 加密存储），下次打开直接使用
-    void saveWyToken(musicU)
+    // 保存登录状态（Token 加密存储，含 __csrf 供写接口使用），下次打开直接使用
+    void saveWyToken(musicU, csrf)
     updateSetting({ 'wy.userInfo': JSON.stringify(userInfo) })
     log.info(`[WY 网页登录] 登录成功，uid: ${userInfo.uid || '-'}，nickname: ${userInfo.nickname || '-'}`)
     toast(t('wy_login_success'))
@@ -72,12 +78,12 @@ const WyLoginModal = ({ componentId }: { componentId: string }) => {
   }
 
   // 先验证 Cookie 有效性再保存，避免保存残留的失效登录状态
-  const trySaveCookie = async(musicU: string): Promise<boolean> => {
+  const trySaveCookie = async(musicU: string, csrf: string): Promise<boolean> => {
     log.info(`[WY 网页登录] 检测到 MUSIC_U（长度: ${musicU.length}），验证登录态...`)
     try {
       const profile = await getLoginStatus(musicU)
       if (canceledRef.current) return true
-      await handleSuccess(musicU, {
+      await handleSuccess(musicU, csrf, {
         uid: String(profile.userId ?? ''),
         nickname: profile.nickname ?? '',
         avatarUrl: profile.avatarUrl ?? '',
@@ -98,12 +104,15 @@ const WyLoginModal = ({ componentId }: { componentId: string }) => {
 
   const checkLoginStatus = async() => {
     let done = false
+    let fallbackCsrf = ''
     try {
       for (const url of COOKIE_URLS) {
         const cookie = await getWebViewCookie(url)
+        const csrf = pickCookieValue(cookie, '__csrf')
+        if (csrf && !fallbackCsrf) fallbackCsrf = csrf
         const musicU = pickMusicU(cookie)
         if (musicU && musicU !== lastInvalidRef.current) {
-          done = await trySaveCookie(musicU)
+          done = await trySaveCookie(musicU, csrf || fallbackCsrf)
           if (done) break
         }
       }

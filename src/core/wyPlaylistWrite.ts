@@ -1,11 +1,12 @@
 // 网易云歌单写入（Stage 4D/4E）：
-// - 通过 getUserPlaylistList 定位「我喜欢的音乐」或用户指定歌单（不硬编码 ID）
+// - 收藏到「我喜欢的音乐」：走官方红心接口（/weapi/radio/like），无需定位歌单
+// - 加入指定歌单：通过 getUserPlaylistList 选择目标歌单（不硬编码 ID）
 // - 使用现有歌单数据做前端去重；尾部状态由调用方决定是否构建失败
 // - token 失效 / 重复 / 网络失败都由提示展示（见 UI 层）
 import { getLoginStatus, getUserPlaylistList } from '@/utils/musicSdk/wy/userPlaylist'
 import { addTracksToPlaylist } from '@/utils/musicSdk/wy/playlistTracks'
+import { checkTrackLiked, likeTrack } from '@/utils/musicSdk/wy/like'
 import { getListDetailAll } from '@/core/songlist'
-import { getSnapshotMeta } from '@/core/wySnapshot'
 import settingState from '@/store/setting/state'
 import { toast } from '@/utils/tools'
 
@@ -26,7 +27,7 @@ export const wyTrackIdsFromMusics = (list: Array<LX.Music.MusicInfo | LX.Music.M
     .filter(Boolean)
 }
 
-// 写入结果的统一提示（重复/登出/网络错误分别说明，绝不静默）
+// 写入结果的统一提示（重复/登出/风控/版权限制分别说明，绝不静默）
 export const toastWyWriteResult = (result: TrackWriteResult) => {
   if (result.error) {
     if (result.error.code == 'INVALID_TOKEN') {
@@ -35,11 +36,17 @@ export const toastWyWriteResult = (result: TrackWriteResult) => {
       toast(global.i18n.t('wy_write_no_favorite'))
     } else if (result.error.code == 'NO_TOKEN') {
       toast(global.i18n.t('wy_playlist_token_empty'))
+    } else if (result.error.code == 'RISK_CONTROL') {
+      toast(global.i18n.t('wy_write_risk_control'))
+    } else if (result.error.code == 'TRACK_UNSUPPORTED') {
+      toast(global.i18n.t('wy_write_unsupported'))
     } else {
       toast(global.i18n.t('wy_write_failed'))
     }
   } else if (result.duplicated) {
     toast(global.i18n.t('wy_write_duplicated'))
+  } else if (result.favorite) {
+    toast(global.i18n.t('wy_write_favorite_success'))
   } else {
     toast(global.i18n.t('wy_write_success', { name: result.playlistName }))
   }
@@ -95,6 +102,7 @@ export const filterTrackIds = async(playlistId: string, trackIds: string[]): Pro
 export interface TrackWriteResult {
   playlistName: string
   duplicated: boolean
+  favorite?: boolean
   error: null | { code: string, message: string }
 }
 
@@ -122,41 +130,41 @@ export const addTracksToWyPlaylist = async(playlist: WyPlaylistItem, trackIds: s
 }
 
 /**
- * 收藏歌曲到「我喜欢的音乐」歌单
+ * 收藏歌曲到「我喜欢的音乐」：
+ * - 走官方红心接口（无需定位歌单 pid，消除"未找到歌单"类问题）
+ * - 写前检查已喜欢状态（检查失败时不阻断）；已喜欢按重复处理
+ * - 红心接口为单曲接口，多首选时串行处理
  */
 export const favoriteToWyPlaylist = async(trackIds: string[]): Promise<TrackWriteResult> => {
-  let playlists: WyPlaylistItem[] = []
-  let onlineError: { code?: string, message: string } | null = null
+  const result: TrackWriteResult = { playlistName: '', duplicated: false, favorite: true, error: null }
+  let token = ''
   try {
-    playlists = await fetchUserPlaylists()
+    token = ensureToken()
   } catch (err) {
-    const e = err as { code?: string, message?: string }
-    onlineError = { code: e.code, message: e.message ?? String(err) }
-    playlists = []
+    result.error = { code: 'NO_TOKEN', message: err instanceof Error ? err.message : String(err) }
+    return result
   }
-  let usedSnapshot = false
-  if (!playlists.length) {
-    const meta = await getSnapshotMeta()
-    const snapshot = meta?.playlists ?? []
-    if (snapshot.length) {
-      usedSnapshot = true
-      playlists = snapshot.map(item => ({
-        id: item.id,
-        name: item.name,
-        trackCount: item.trackCount,
-        author: item.author,
-        img: item.img,
-        specialType: item.specialType ?? 0,
-      }))
+  let added = 0
+  let duplicated = 0
+  for (const trackId of trackIds) {
+    try {
+      const alreadyLiked = await checkTrackLiked({ trackId, token })
+      if (alreadyLiked === true) {
+        duplicated++
+        continue
+      }
+      await likeTrack({ trackId, token })
+      added++
+    } catch (err) {
+      const e = err as { code?: string, message?: string }
+      if (e?.code == 'TRACK_DUPLICATED') {
+        duplicated++
+        continue
+      }
+      result.error = { code: e?.code ?? 'NETWORK', message: e?.message ?? String(err) }
+      return result
     }
   }
-  const favorite = findFavoritePlaylist(playlists)
-  if (!favorite) {
-    // 在线获取失败且无本地快照可用时，直接反馈真实原因（如登录失效），避免误报「未找到歌单」
-    if (!usedSnapshot && onlineError) {
-      return { playlistName: '', duplicated: false, error: { code: onlineError.code ?? 'NETWORK', message: onlineError.message } }
-    }
-    return { playlistName: '', duplicated: false, error: { code: 'NO_FAVORITE', message: '未找到我喜欢的音乐歌单' } }
-  }
-  return addTracksToWyPlaylist(favorite, trackIds)
+  result.duplicated = added === 0 && duplicated > 0
+  return result
 }

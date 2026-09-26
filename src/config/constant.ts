@@ -83,6 +83,7 @@ export const storageDataPrefix = {
   wySnapshotMeta: '@wy_snapshot_meta',
   wySnapshotSongs: '@wy_snapshot_songs__',
   wyMusicUSecure: '@wy_music_u_secure',
+  wyCsrfSecure: '@wy_csrf_secure',
 } as const
 
 // v0.x.x 版本的 data keys

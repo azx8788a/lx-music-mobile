@@ -1,22 +1,25 @@
 // 登录态：/weapi/w/nuser/account/get（旧路径 /weapi/login/status 已失效）
 // 歌单列表：/weapi/user/playlist（参考 NeteaseCloudMusicApi 的 login_status / user_playlist 模块）
+// 写操作防风控：Cookie 带 __csrf、os=pc，payload 带 csrf_token（来源见 wyCsrf）
 import { weapi } from './utils/crypto'
 import { httpFetch } from '../../request'
+import { getWyCsrf } from '../../../wyCsrf'
 
 
 const successCode = 200
 
 const request = (path, data, token) => {
+  const csrf = getWyCsrf()
   const requestObj = httpFetch(`https://music.163.com${path}`, {
     method: 'post',
     format: 'json',
     headers: {
       'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
       Referer: 'https://music.163.com',
-      Cookie: `MUSIC_U=${token}`,
+      Cookie: `MUSIC_U=${token}; __csrf=${csrf}; os=pc`,
     },
     // cache: 'default',
-    form: weapi(data),
+    form: weapi({ ...data, csrf_token: csrf }),
     timeout: 10_000,
   })
   return requestObj.promise
