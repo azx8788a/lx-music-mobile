@@ -1,4 +1,8 @@
 // https://github.com/Binaryify/NeteaseCloudMusicApi/blob/master/util/crypto.js
+// ⚠️ 此文件的加密细节（secretKey 随机生成/反转、RSA_NO_PADDING 手工补零、双层 AES-CBC）
+// 与网易云服务端约定严格耦合，看似普通但极易被"规范化重构"破坏：
+// 一旦改动会导致所有 weapi 请求静默失败（服务端解出的 secretKey 不对），且难以定位。
+// 修改此处前务必先用公开接口（如 /weapi/playlist/catalogue）验证仍能正常返回。
 import { btoa } from 'react-native-quick-base64'
 import { aesEncryptSync, aesDecryptSync, rsaEncryptSync, AES_MODE, RSA_PADDING } from '@/utils/nativeModules/crypto'
 import { toMD5 } from '../../utils'
