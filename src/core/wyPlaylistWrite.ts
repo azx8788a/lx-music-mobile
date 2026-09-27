@@ -1,11 +1,13 @@
 // 网易云歌单写入（Stage 4D/4E）：
-// - 收藏「我喜欢的音乐」与加入指定歌单统一走歌单写入接口（manipulate/tracks）
-//   （真机实证：radio/like 红心接口在部分网络环境持续命中风控 -460，已弃用该通道）
-// - 收藏歌单通过 specialType==5 定位（在线优先，本地快照兜底）
+// - 收藏「我喜欢的音乐」：主通道 /weapi/song/like（无需定位歌单），失败降级歌单写入
+// - 加入指定歌单：通过 getUserPlaylistList 选择目标歌单（不硬编码 ID），走歌单写入接口
+// - 降级写入通过 specialType==5 定位收藏歌单（在线优先，本地快照兜底）
+//   （真机/沙箱实证：歌单写入通道可用；radio/like 红心接口部分网络环境持续命中风控 -460，已弃用）
 // - 使用现有歌单数据做前端去重；尾部状态由调用方决定是否构建失败
 // - token 失效 / 重复 / 网络失败都由提示展示（见 UI 层）
 import { getLoginStatus, getUserPlaylistList } from '@/utils/musicSdk/wy/userPlaylist'
 import { addTracksToPlaylist } from '@/utils/musicSdk/wy/playlistTracks'
+import { checkTrackLiked, likeTrack } from '@/utils/musicSdk/wy/like'
 import { getListDetailAll } from '@/core/songlist'
 import { getSnapshotMeta } from '@/core/wySnapshot'
 import settingState from '@/store/setting/state'
@@ -133,10 +135,46 @@ export const addTracksToWyPlaylist = async(playlist: WyPlaylistItem, trackIds: s
 
 /**
  * 收藏歌曲到「我喜欢的音乐」：
- * - 真机实证：歌单写入接口可用，radio/like 红心接口持续命中风控（-460），故统一走歌单写入
- * - 定位收藏歌单：在线优先（specialType==5），失败时回退本地快照
+ * - 主通道 /weapi/song/like（新喜欢接口，无需定位歌单；单曲串行）
+ * - 主通道失败时降级歌单写入（manipulate/tracks，specialType==5 定位；真机同通道已验证可用）
+ *   （radio/like 红心接口部分网络环境持续命中风控 -460，已弃用）
  */
 export const favoriteToWyPlaylist = async(trackIds: string[]): Promise<TrackWriteResult> => {
+  let token = ''
+  try {
+    token = ensureToken()
+  } catch (err) {
+    return { playlistName: '', duplicated: false, favorite: true, error: { code: 'NO_TOKEN', message: err instanceof Error ? err.message : String(err) } }
+  }
+
+  // 主通道：/weapi/song/like（写前检查已喜欢，失败不阻断）
+  let added = 0
+  let duplicated = 0
+  let primaryError: { code?: string, message: string } | null = null
+  for (const trackId of trackIds) {
+    try {
+      const alreadyLiked = await checkTrackLiked({ trackId, token })
+      if (alreadyLiked === true) {
+        duplicated++
+        continue
+      }
+      await likeTrack({ trackId, token })
+      added++
+    } catch (err) {
+      const e = err as { code?: string, message?: string }
+      if (e?.code == 'TRACK_DUPLICATED') {
+        duplicated++
+        continue
+      }
+      primaryError = { code: e?.code, message: e?.message ?? String(err) }
+      break
+    }
+  }
+  if (!primaryError) {
+    return { playlistName: '', duplicated: added === 0 && duplicated > 0, favorite: true, error: null }
+  }
+
+  // 降级通道：歌单写入（定位「我喜欢的音乐」，在线优先、快照兜底）
   let playlists: WyPlaylistItem[] = []
   let onlineError: { code?: string, message: string } | null = null
   try {
@@ -144,7 +182,6 @@ export const favoriteToWyPlaylist = async(trackIds: string[]): Promise<TrackWrit
   } catch (err) {
     const e = err as { code?: string, message?: string }
     onlineError = { code: e.code, message: e.message ?? String(err) }
-    playlists = []
   }
   let usedSnapshot = false
   if (!playlists.length) {
@@ -164,13 +201,16 @@ export const favoriteToWyPlaylist = async(trackIds: string[]): Promise<TrackWrit
   }
   const favorite = findFavoritePlaylist(playlists)
   if (!favorite) {
-    // 在线获取失败且无本地快照可用时，直接反馈真实原因，避免误报「未找到歌单」
-    if (!usedSnapshot && onlineError) {
-      return { playlistName: '', duplicated: false, favorite: true, error: { code: onlineError.code ?? 'NETWORK', message: onlineError.message } }
-    }
-    return { playlistName: '', duplicated: false, favorite: true, error: { code: 'NO_FAVORITE', message: '未找到我喜欢的音乐歌单' } }
+    // 无法定位收藏歌单：反馈可诊断的原因（在线拉取失败优先，其次主通道错误）
+    const reason = (!usedSnapshot && onlineError) ? onlineError : primaryError
+    return { playlistName: '', duplicated: false, favorite: true, error: { code: reason.code ?? 'NO_FAVORITE', message: reason.message } }
   }
-  const result = await addTracksToWyPlaylist(favorite, trackIds)
-  result.favorite = true
-  return result
+  const writeResult = await addTracksToWyPlaylist(favorite, trackIds)
+  writeResult.favorite = true
+  if (writeResult.error?.code == 'INVALID_TOKEN') return writeResult
+  if (writeResult.error) {
+    // 两路都失败：反馈主通道错误（代表收藏本意，如风控/网络）
+    return { playlistName: '', duplicated: false, favorite: true, error: { code: primaryError.code ?? 'NETWORK', message: primaryError.message } }
+  }
+  return writeResult
 }
